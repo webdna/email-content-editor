@@ -1,0 +1,311 @@
+
+<div id="email-entries" class="" style="margin-bottom: 2rem;">
+    <div class="meta">
+        <div id="system-message-field" class="field" data-attribute="system-message">
+            <div class="heading">
+                <label id="system-message-label" for="system-message">System Message</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/select" with {
+                    id: 'system-message',
+                    name: 'system-message',
+                    options: systemMessages,
+                    value: email.systemMessageKey
+                } only %}
+            </div>
+        </div>
+        <div id="test-user-field" class="field" data-attribute="test-user">
+            <div class="heading">
+                <label id="test-user-label" for="test-user">Test User</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/elementSelect" with {
+                    name: 'testUser',
+                    id: 'testUser',
+                    elementType: className(create('craft\\elements\\User')),
+                } only %}
+                
+            </div>
+        </div>
+        {% if craft.app.getPlugins().isPluginEnabled('commerce') %}
+            <div id="test-order-field" class="field" data-attribute="test-order">
+                <div class="heading">
+                    <label id="test-order-label" for="test-order">Test Order</label>
+                </div>
+                <div class="input ltr">
+                    {% include "_includes/forms/elementSelect" with {
+                        name: 'testOrder',
+                        id: 'testOrder',
+                        elementType: className(create('craft\\commerce\\elements\\Order')),
+                    } only %}
+                </div>
+            </div>
+        {% endif %}
+        <div id="test-json-field" class="field" data-attribute="test-json">
+            <div class="heading">
+                <label id="test-json-label" for="test-json">Additional Test Variables (JSON)</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/textarea" with {
+                    name: 'testVariables',
+                    id: 'testVariables',
+                    style: 'font-family:mono',
+                    class:'nicetext code text',
+                    value: email.testVariables              
+                } only %}
+                
+            </div>
+        </div>
+        <div id="subject-field" class="field" data-attribute="subject">
+            <div class="heading">
+                <label id="subject-label" for="subject">Email Subject</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/text" with {
+                    name: 'subject',
+                    id: 'subject',
+                    value: email.subject
+                } only %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+                
+
+                {# <div id="authorId-field" class="field" data-attribute="authorId">
+                    <div class="heading">
+                        <label id="authorId-label" for="authorId">Author</label>
+                    </div>
+                    <div class="input ltr">
+                        <input type="hidden" name="authorId" value="">
+                        <div id="authorId" class="elementselect">
+                            <div class="elements">
+                                <div class="element small removable hasstatus hasthumb" title="webdna" data-can-suspend="" data-type="craft\elements\User" data-id="1" data-site-id="2" data-status="active" data-label="webdna" data-settings="{&quot;context&quot;:&quot;field&quot;,&quot;size&quot;:&quot;small&quot;,&quot;showStatus&quot;:true,&quot;showThumb&quot;:true,&quot;showLabel&quot;:true,&quot;showDraftName&quot;:true}" data-editable="" tabindex="0">
+                                    <input type="hidden" name="authorId" value="1">
+                                        <button type="button" class="delete icon" title="Remove" aria-label="Remove webdna"></button>
+                                        <div class="rounded elementthumb" data-sizes="34px" data-srcset="https://gecko-live.ddev.site/cpresources/14d31e4c/images/user.svg?v=1689778596 34w, https://gecko-live.ddev.site/cpresources/14d31e4c/images/user.svg?v=1689778596 68w" data-alt="webdna">
+                                            <img sizes="34px" srcset="https://gecko-live.ddev.site/cpresources/14d31e4c/images/user.svg?v=1689778596 34w, https://gecko-live.ddev.site/cpresources/14d31e4c/images/user.svg?v=1689778596 68w" alt="webdna"></div>
+                                            <div class="label">
+                                                <span class="title">webdna</span>
+                                            </div>
+                                            <span class="status active green" role="img" aria-label="Status: Active"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex hidden flex-nowrap">
+                                        <button type="button" class="hidden btn add icon dashed" aria-label="Choose" tabindex="0">Choose</button>
+                                        <div class="hidden spinner"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <fieldset id="postDate-field" class="field" data-attribute="postDate">
+                            <legend class="visually-hidden" data-label="Post Date">Post Date</legend>
+                                    <div class="heading">
+                                        <legend id="postDate-label" aria-hidden="true">Post Date</legend>
+                                    </div>
+                                    <div class="input ltr">
+                                        <div class="datetimewrapper">
+
+
+                                            <div class="datewrapper">
+                                                <span id="postDate-date-format" class="visually-hidden">
+                                                    DD/MM/YYYY
+                                                </span>
+                                                <input type="text" id="postDate-date" class="text hasDatepicker" name="postDate[date]" value="08/09/2023" size="10" autocomplete="off" placeholder=" " dir="ltr" aria-describedby="postDate-date-format" aria-label="Date">
+                                                    <div data-icon="date"></div>
+                                                    <input type="hidden" name="postDate[timezone]" value="Europe/London"></div>
+
+
+                                                    <div class="timewrapper">
+                                                        <span id="postDate-time-format" class="visually-hidden">
+                                                            HH:MM
+                                                        </span>
+                                                        <input type="text" id="postDate-time" class="text ui-timepicker-input" name="postDate[time]" value="16:45" size="10" autocomplete="off" placeholder=" " dir="ltr" aria-describedby="postDate-time-format" aria-label="Time">
+                                                            <div data-icon="time"></div>
+                                                        </div>
+                                                        <button type="button" class="clear-btn" title="Clear" aria-label="Clear"></button>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset id="expiryDate-field" class="field" data-attribute="expiryDate">
+                                                <legend class="visually-hidden" data-label="Expiry Date">Expiry Date</legend>
+                                                <div class="heading">
+                                                    <legend id="expiryDate-label" aria-hidden="true">Expiry Date</legend>
+                                                </div>
+                                                <div class="input ltr">
+                                                    <div class="datetimewrapper">
+
+
+                                                        <div class="datewrapper">
+                                                            <span id="expiryDate-date-format" class="visually-hidden">
+                                                                DD/MM/YYYY
+                                                            </span>
+                                                            <input type="text" id="expiryDate-date" class="text hasDatepicker" name="expiryDate[date]" value="" size="10" autocomplete="off" placeholder=" " dir="ltr" aria-describedby="expiryDate-date-format" aria-label="Date">
+                                                                <div data-icon="date"></div>
+                                                                <input type="hidden" name="expiryDate[timezone]" value="Europe/London"></div>
+
+
+                                                                <div class="timewrapper">
+                                                                    <span id="expiryDate-time-format" class="visually-hidden">
+                                                                        HH:MM
+                                                                    </span>
+                                                                    <input type="text" id="expiryDate-time" class="text ui-timepicker-input" name="expiryDate[time]" value="" size="10" autocomplete="off" placeholder=" " dir="ltr" aria-describedby="expiryDate-time-format" aria-label="Time">
+                                                                        <div data-icon="time"></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </fieldset>
+                                                    </div>
+                                                    <fieldset>
+                                                        <legend class="h6">Status</legend>
+                                                        <div class="meta">
+                                                            <div id="enabled-field" class="field lightswitch-field" data-attribute="enabled">
+                                                                <div class="heading">
+                                                                    <label id="enabled-label" for="enabled">Enabled</label>
+                                                                </div>
+                                                                <div class="input ltr">
+
+                                                                    <button type="button" id="enabled" class="lightswitch on" role="switch" aria-checked="true" aria-labelledby="enabled-label">
+                                                                        <div class="lightswitch-container">
+                                                                            <div class="handle"></div>
+                                                                        </div>
+                                                                        <input type="hidden" name="enabled" value="1"></button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </fieldset>
+                                                        <div id="textarea1979956202-field" class="field" data-attribute="textarea1979956202">
+                                                            <div class="heading">
+                                                                <label id="textarea1979956202-label" class="h6" for="textarea1979956202">Notes about your changes</label>
+                                                            </div>
+                                                            <div class="input ltr">
+                                                                <textarea id="textarea1979956202" class="nicetext notes text fullwidth" name="notes" rows="1" cols="50" aria-label="Notes about your changes" style="min-height: 48px;"></textarea>
+                                                            </div>
+                                                        </div>
+
+
+                                                        <hr>
+                                                            <div class="overflow-hidden meta">
+                                                                <div class="data">
+                                                                    <h5 class="heading">SEO Preview:</h5>
+                                                                </div>
+                                                                <div style="zoom: 0.60; -moz-transform: scale(0.60); -moz-transform-origin: 0 0;">
+
+                                                                    <div class="preview-column">
+                                                                        <div class="displaypreview" style="border: none; padding-left: 0;">
+                                                                            <h4 class="metadata-title-separator">
+                                                                                <span>Google</span>
+                                                                            </h4>
+                                                                            <div class="card-seo-google">
+                                                                                <span class="card-seo-google__title js-preview-title">
+                                                                                    <a class="googleDisplay" href="https://gecko-live.ddev.site/acts-2" rel="noopener" target="_blank">🚧 Acts | Gecko Live</a>
+                                                                                </span>
+                                                                                <div class="card-seo-google__url">
+                                                                                    <span class="card-seo-google__url-title js-preview-domain">gecko-live.ddev.site/acts-2</span>
+                                                                                    <span class="card-seo-google__url-arrow"></span>
+                                                                                </div>
+                                                                                <span class="card-seo-google__description js-preview-description">
+                                                                                    Entertainment agency specialising in live entertainment, wedding bands &amp; corporate entertainment.
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                    <div class="preview-column">
+                                                                        <div class="displaypreview" style="border: none; padding-left: 0;">
+                                                                            <h4 class="metadata-title-separator">
+                                                                                <span>Twitter</span>
+                                                                            </h4>
+                                                                            <div class="card-seo-twitter">
+                                                                                <a class="seo-card-wrapper-link" href="https://gecko-live.ddev.site/acts-2" rel="noopener" target="_blank">
+                                                                                    <div class="card-seo-twitter__image js-preview-image 0-TwitterCard-image-wrapper" style="background-image: url(&quot;https://optimise2.assets-servd.host/gecko-live/production/images/Gecko-Live.png?w=800&amp;h=418&amp;q=82&amp;auto=format&amp;fit=crop&amp;dm=1693571708&amp;s=4da47be2afd6f67c79a3b6ded4dcf71f&quot;);"></div>
+                                                                                    <div class="card-seo-twitter__text">
+                                                                                        <span class="card-seo-twitter__title js-preview-title">
+                                                                                            Acts
+                                                                                        </span>
+                                                                                        <span class="card-seo-twitter__description js-preview-description">
+                                                                                            Entertainment agency specialising in live entertainment, wedding bands &amp; corporate entertainment.
+                                                                                        </span>
+                                                                                        <span class="card-seo-twitter__link js-preview-domain">
+                                                                                            gecko-live.ddev.site
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </a>
+                                                                            </div>
+                                                                            <script type="text/javascript">
+                                                                                var x = document.getElementsByClassName("0-TwitterCard-image-wrapper");
+                                                                                var i;
+                                                                                for (i = 0; i < x.length; i++) {
+                                                                                    x[i].style.backgroundImage = "url('" + "https://gecko-live.ddev.site/cpresources/fb145d28/img/no_image_set.png" + "')";
+                                                                                    x[i].style.backgroundImage = "url('" + "https://optimise2.assets-servd.host/gecko-live/production/images/Gecko-Live.png?w=800&h=418&q=82&auto=format&fit=crop&dm=1693571708&s=4da47be2afd6f67c79a3b6ded4dcf71f" + "')";
+                                                                                }
+                                                                            </script>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                    <div class="preview-column">
+                                                                        <div class="displaypreview" style="border: none; padding-left: 0;">
+                                                                            <h4 class="metadata-title-separator">
+                                                                                <span>Facebook</span>
+                                                                            </h4>
+                                                                            <div class="card-seo-facebook">
+                                                                                <a class="seo-card-wrapper-link" href="https://gecko-live.ddev.site/acts-2" rel="noopener" target="_blank">
+                                                                                    <div class="card-seo-facebook__image js-preview-image 0-Facebook-post-image" style="background-image: url(&quot;https://optimise2.assets-servd.host/gecko-live/production/images/Gecko-Live.png?w=1200&amp;h=630&amp;q=82&amp;auto=format&amp;fit=crop&amp;dm=1693571708&amp;s=6c736d69b203c29aa8c140ec6c0860cb&quot;);"></div>
+                                                                                    <div class="card-seo-facebook__text">
+                                                                                        <span class="card-seo-facebook__link js-preview-domain">
+                                                                                            gecko-live.ddev.site
+                                                                                        </span>
+                                                                                        <div class="card-seo-facebook__content">
+                                                                                            <div style="margin-top:5px">
+                                                                                                <div class="card-seo-facebook__title js-preview-title">
+                                                                                                    Acts
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <span class="card-seo-facebook__description js-preview-description">Entertainment agency specialising in live entertainment, wedding bands &amp; corporate entertainment.</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </a>
+                                                                            </div>
+
+                                                                            <script type="text/javascript">
+                                                                                var x = document.getElementsByClassName("0-Facebook-post-image");
+                                                                                var i;
+                                                                                for (i = 0; i < x.length; i++) {
+                                                                                    x[i].style.backgroundImage = "url('" + "https://gecko-live.ddev.site/cpresources/fb145d28/img/no_image_set.png" + "')";
+                                                                                    x[i].style.backgroundImage = "url('" + "https://optimise2.assets-servd.host/gecko-live/production/images/Gecko-Live.png?w=1200&h=630&q=82&auto=format&fit=crop&dm=1693571708&s=6c736d69b203c29aa8c140ec6c0860cb" + "')";
+                                                                                }
+                                                                            </script>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                </div>
+                                                            </div>
+                                                            fucking sidebar
+                                                            <dl class="meta read-only">
+                                                                <div class="data">
+                                                                    <dt class="heading">ID</dt>
+                                                                    <dd class="value">40935</dd>
+                                                                </div>
+                                                                <div class="data">
+                                                                    <dt class="heading">Status</dt>
+                                                                    <dd class="value">
+                                                                        <span class="status live"></span>
+                                                                        <span>Live</span>
+                                                                    </dd>
+                                                                </div>
+                                                                <div class="data">
+                                                                    <dt class="heading">Created at</dt>
+                                                                    <dd class="value">07/12/2022, 16:28</dd>
+                                                                </div>
+                                                                <div class="data">
+                                                                    <dt class="heading">Updated at</dt>
+                                                                    <dd class="value">08/09/2023, 16:45</dd>
+                                                                </div>
+                                                            </dl>
+                                                        </div>
+                                                    </div> #}

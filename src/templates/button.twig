@@ -1,0 +1,10 @@
+{{ tag('button', {
+    class: 'btn formsubmit',
+    type: 'button',
+    data: {
+        action: 'email-entries/email/send-email',
+        redirect: entry.cpEditUrl|hash,
+        params: "{entryId: #{entry.id}}"
+    },
+    text: 'Send Test Email'
+}) }}

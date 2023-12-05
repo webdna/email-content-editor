@@ -1,0 +1,61 @@
+{# {% extends '_layouts/cp' %} #}
+
+{% set title = 'Email Entries' %}
+{% import "_includes/forms" as forms %}
+{% set cpHelper = create('craft\\helpers\\Cp') %}
+
+<div class="heading">
+    <label id="title-label" for="title">
+        Select Email Section (s)
+    </label>
+</div>
+
+{{ cpHelper.multiSelectHtml({
+    'id': 'sectionIds',
+    'describedBy': '',
+    'class': 'selectize',
+    'name': 'sectionIds',
+    'values': settings.sectionIds,
+    'options': allSections,
+    'inputAttributes': {
+        'style': {
+            'display': 'none', 
+        },
+    },
+})|raw }}
+
+<div class="heading" style="margin-top: 2rem;">
+    <label id="title-label" for="title">
+        Create custom system messages
+    </label>
+</div>
+
+{{ forms.editableTable({
+    'instructions': 'Set Custom Emails.'|t('email-editor'),
+    'id': 'customEmails',
+    'name': 'customEmails',
+    'staticRows':false,
+    'allowAdd': true,
+    'allowDelete': true,
+    'allowReorder': true,
+    'addRowLabel': 'Add Custom Email'|t('email-editor'),
+    'cols': {
+        'key': {
+            'heading': 'Key'|t('email-editor'),
+            'type': 'singleline'
+        },
+        'heading': {
+            'heading': 'Default Heading'|t('email-editor'),
+            'type': 'singleline'
+        },
+        'subject': {
+            'heading': 'Default Subject'|t('email-editor'),
+            'type': 'singleline',
+        },
+        'body': {
+            'heading': 'Default Body'|t('email-editor'),
+            'type': 'multiline',
+        }
+    }, 
+    'rows': settings.customSystemMessages
+}) }}
