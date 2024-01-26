@@ -10,7 +10,6 @@ use craft\base\Model;
  */
 class Settings extends Model
 {
-    public array $sectionIds = [];
     public array $customSystemMessages = [];
     protected function defineRules(): array
     {

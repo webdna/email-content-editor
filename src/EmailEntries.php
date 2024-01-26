@@ -5,31 +5,21 @@ namespace mikeymeister\craftemailentries;
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\commerce\events\MailEvent;
+use craft\commerce\services\Emails as CommerceEmails;
 use craft\elements\Entry;
 use craft\events\DefineHtmlEvent;
-use craft\events\ElementEvent;
+use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterEmailMessagesEvent;
-
 use craft\events\RegisterUserPermissionsEvent;
-use craft\events\TemplateEvent;
-use craft\helpers\ElementHelper;
-use craft\helpers\Json;
 use craft\mail\Mailer;
-
-use craft\services\Elements;
+use craft\services\Fields;
 use craft\services\SystemMessages;
-
 use craft\services\UserPermissions;
 use craft\web\View;
-
-use craft\commerce\services\Emails as CommerceEmails;
-use craft\commerce\events\MailEvent;
-
-
-use mikeymeister\craftemailentries\models\Email;
+use mikeymeister\craftemailentries\fields\EmailSettings;
 use mikeymeister\craftemailentries\models\Settings;
 use mikeymeister\craftemailentries\services\Emails;
-
 use yii\base\Event;
 
 /**
@@ -61,10 +51,12 @@ class EmailEntries extends Plugin
         // Defer most setup tasks until Craft is fully initialized
         Craft::$app->onInit(function() {
             $this->_registerPermissions();
-            $this->_registerHooks();
             $this->_attachEventHandlers();
             $this->_attachCommerceEventHandlers();
             // ...
+        });
+        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function (RegisterComponentTypesEvent $event) {
+            $event->types[] = EmailSettings::class;
         });
     }
 
@@ -75,28 +67,11 @@ class EmailEntries extends Plugin
 
     protected function settingsHtml(): ?string
     {
-        $allSections = [];
-        foreach (Craft::$app->getSections()->getAllSections() as $section) {
-            $allSections[] = [
-                'label' => $section->name,
-                'value' => $section->id
-            ];
-        }
-        $sectionIdsInput = 'sectionIds';
-        $view = Craft::$app->getView();
-        $view->registerJsWithVars(fn($sectionIdsInput) => <<<JS
-            $('#' + $sectionIdsInput).selectize({
-                plugins: ['remove_button'],
-                });
-            JS, [
-            $view->namespaceInputId($sectionIdsInput),
-        ]);
-
         return \Craft::$app->getView()->renderTemplate(
             'email-entries/settings',
             [ 
                 'settings' => $this->getSettings(),
-                'allSections' => $allSections
+                // 'allSections' => $allSections
             ]
         );
     }
@@ -134,55 +109,8 @@ class EmailEntries extends Plugin
         );
     }
 
-    private function _registerHooks():void
-    {
-        // if the email is in a section set as an email section
-        // and they have permission to edit the email or its test variables
-        // or to send a test email then show the email settings tab
-        // Craft::$app->view->hook('cp.elements.element', function(array &$context) {
-        //     // if ($context['elementType'] === Entry::class
-        //     //     && $context['elements'])
-        //     Craft::dd($context);
-        //     $view = Craft::$app->getView();
-        //     //Craft::dd($context);
-        //     $context['tabs']['email-entries'] = [
-        //         'label' => 'Email Settings',
-        //         'url' => '#emailEntriesTab',
-        //         'class' => null
-        //     ];
-
-        //     return $view->renderTemplate('email-entries/email-settings', [
-        //         'email' => 'email',
-        //     ]);
-        // });
-
-    }
-
-
     private function _attachEventHandlers(): void
     {
-
-
-
-        Event::on(
-            Entry::class,
-            Entry::EVENT_DEFINE_SIDEBAR_HTML,
-            function (DefineHtmlEvent $event) {
-                // ...Add the dropdown here and maybe some test variables
-                $entry = $event->sender;
-                if ($event->static !== true 
-                    && in_array($entry->sectionId,EmailEntries::getInstance()->getSettings()->sectionIds)
-                ) {
-                    $email = EmailEntries::getInstance()->emails->getEmailByEntry($entry) ?? new Email();
-                    $messages = collect(Craft::$app->getSystemMessages()->getAllMessages())->pluck('heading', 'key')->all();
-                    $event->html .= Craft::$app->getView()->renderTemplate('email-entries/sidebar', [
-                        'email'=>$email,
-                        'systemMessages' => $messages
-                    ], View::TEMPLATE_MODE_CP);
-                }
-            }
-        );
-
         Event::on(
             Entry::class,
             Entry::EVENT_DEFINE_ADDITIONAL_BUTTONS,
@@ -190,7 +118,7 @@ class EmailEntries extends Plugin
                 // ...add the send test email
                 $entry = $event->sender;
                 if ($event->static !== true 
-                    && in_array($entry->sectionId,EmailEntries::getInstance()->getSettings()->sectionIds)
+                    && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($entry)
                 ) {
                     $event->html .= Craft::$app->getView()->renderTemplate('email-entries/button', [
                         'entry'=>$entry,
@@ -199,57 +127,39 @@ class EmailEntries extends Plugin
 
             }
         );
-        // Register event handlers here ...
-        // (see https://craftcms.com/docs/4.x/extend/events.html to get started)
-        Event::on(
-            Elements::class,
-            Elements::EVENT_AFTER_SAVE_ELEMENT, 
-            function(ElementEvent $e) {
-                if (ElementHelper::isDraftOrRevision($e->element)) {
-                    return;
-                }
-                if (
-                    $e->element instanceof Entry 
-                    && in_array($e->element->sectionId, $this->getSettings()->sectionIds)
-                    && Craft::$app->getRequest()->getIsCpRequest()
-                )
-                {
-                    EmailEntries::getInstance()->emails->saveEmailOnEntrySave($e->element);
-                    return;
-                }
-            }
-        );
 
-        Event::on(
-            View::class,
-            View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE,
-            function(TemplateEvent $e) {
-                if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
-                    if (
-                        array_key_exists('entry',$e->variables) 
-                        && in_array($e->variables['entry']->sectionId, $this->getSettings()->sectionIds) 
-                        && Craft::$app->user->checkPermission('testEmails')
-                    ) {
-                        $email = EmailEntries::getInstance()->emails->getEmailByEntry($e->variables['entry']);
+        // Event::on(
+        //     View::class,
+        //     View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE,
+        //     function(TemplateEvent $e) {
+        //         if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
+        //             if (
+        //                 array_key_exists('entry',$e->variables) 
+        //                 && in_array($e->variables['entry']->sectionId, $this->getSettings()->sectionIds) 
+        //                 && Craft::$app->user->checkPermission('testEmails')
+        //             ) {
+        //                 $email = EmailEntries::getInstance()->emails->getEmailByEntry($e->variables['entry']);
                         
-                        if ($email && $email->testVariables) {
-                            // Maybe there is twig in there
-                            $rendered = Craft::$app->getView()->renderString($email->testVariables, [], View::TEMPLATE_MODE_SITE);
-                            $e->variables['testVariables'] = Json::decodeIfJson($rendered);
-                            $e->variables['variables']['testVariables'] = $e->variables['testVariables'];
-                        }
-                    }
-                }
-            }
-        );
+        //                 if ($email && $email->testVariables) {
+        //                     // Maybe there is twig in there
+        //                     $rendered = Craft::$app->getView()->renderString($email->testVariables, [], View::TEMPLATE_MODE_SITE);
+        //                     $e->variables['testVariables'] = Json::decodeIfJson($rendered);
+        //                     $e->variables['variables']['testVariables'] = $e->variables['testVariables'];
+        //                 }
+        //             }
+        //         }
+        //     }
+        // );
 
         Event::on(
             Mailer::class,
             Mailer::EVENT_BEFORE_SEND,
             function(Event $event) {
                 if ($event->message->key != null) {
-                    $email = $this->emails->getEmailByKey($event->message->key);
-                    if ($email) {  
+
+                    // is there an entry set up to modify this system message?
+                    $entry = EmailEntries::getInstance()->emails->findEntryForEmail($event->message->key);
+                    if ($entry) {  
                         $toEmailArr = array_keys($event->message->getTo());
                         $toEmail = array_pop($toEmailArr);
                         $user = Craft::$app->users->getUserByUsernameOrEmail($toEmail);
@@ -260,18 +170,14 @@ class EmailEntries extends Plugin
                                 'friendlyName' => explode('@',$toEmail)[0]
                             ];
                         }
-                        $entry = Entry::find()
-                            ->id($email->elementId)
-                            ->siteId(Craft::$app->getSites()->getCurrentSite()->id)
-                            ->one();
-                        if($entry) {
-                            $variables = $event->message->variables;
-                            $variables['variables'] = $event->message->variables;
-                            $variables['recipient'] = $user;
-                            $variables['entry'] = $entry;
-                            $event->message = EmailEntries::getInstance()->emails->buildEmail($entry,$event->message,$email,$variables);
-                        }
-                    }
+                        
+                        $variables = $event->message->variables;
+                        $variables['variables'] = $event->message->variables;
+                        $variables['recipient'] = $user;
+                        $variables['entry'] = $entry;
+                        
+                        $event->message = EmailEntries::getInstance()->emails->buildEmail($entry,$event->message,$variables);
+                    }    
                 }
             }
         ); 

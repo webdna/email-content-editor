@@ -1,0 +1,62 @@
+
+{# <div id="email-entries" class="" style="margin-bottom: 2rem;"> #}
+    {# <div class="meta"> #}
+        <div id="subject-field" class="field" data-attribute="subject">
+            <div class="heading">
+                <label id="subject-label" for="subject">Email Subject</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/text" with {
+                    id: 'subject',
+                    name: "#{name}[subject]",
+                    value: subject
+                } only %}
+                
+            </div>
+        </div>
+        <div id="system-message-field" class="field" data-attribute="system-message">
+            <div class="heading">
+                <label id="system-message-label" for="system-message">System Message</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/select" with {
+                    id: 'system-message',
+                    name: "#{name}[messageKey]",
+                    options: options,
+                    value: messageKey,
+                } only %}
+            </div>
+        </div>
+        {% if craft.app.getPlugins().isPluginEnabled('commerce') %}
+            <div id="test-order-field" class="field" data-attribute="test-order">
+                <div class="heading">
+                    <label id="test-order-label" for="test-order">Test Order</label>
+                </div>
+                <div class="input ltr">
+                    {% include "_includes/forms/elementSelect" with {
+                        id: 'test-order-id',
+                        name: "#{name}[testOrderId]",
+                        elementType: className(create('craft\\commerce\\elements\\Order')),
+                        value: testOrderId
+                    } only %}
+                </div>
+            </div>
+        {% endif %}
+        <div id="test-json-field" class="field" data-attribute="test-json">
+            <div class="heading">
+                <label id="test-json-label" for="test-json">Additional Test Variables (JSON)</label>
+            </div>
+            <div class="input ltr">
+                {% include "_includes/forms/textarea" with {
+                    name: "#{name}[testVariables]",
+                    id: 'testVariables',
+                    style: 'font-family:mono',
+                    class:'nicetext code text',
+                    value: testVariables              
+                } only %}
+                
+            </div>
+        </div>
+{#         
+    </div>
+</div> #}

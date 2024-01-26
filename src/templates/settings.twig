@@ -4,26 +4,6 @@
 {% import "_includes/forms" as forms %}
 {% set cpHelper = create('craft\\helpers\\Cp') %}
 
-<div class="heading">
-    <label id="title-label" for="title">
-        Select Email Section (s)
-    </label>
-</div>
-
-{{ cpHelper.multiSelectHtml({
-    'id': 'sectionIds',
-    'describedBy': '',
-    'class': 'selectize',
-    'name': 'sectionIds',
-    'values': settings.sectionIds,
-    'options': allSections,
-    'inputAttributes': {
-        'style': {
-            'display': 'none', 
-        },
-    },
-})|raw }}
-
 <div class="heading" style="margin-top: 2rem;">
     <label id="title-label" for="title">
         Create custom system messages

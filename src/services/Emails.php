@@ -8,14 +8,13 @@ use mikeymeister\craftemailentries\records\Email as EmailRecord;
 
 use Craft;
 use craft\elements\Entry;
-use craft\db\Query;
-use craft\db\Table;
 use craft\helpers\App;
-use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\mail\Message;
 use craft\models\SystemMessage;
+use mikeymeister\craftemailentries\fields\EmailSettings as FieldsEmailSettings;
+use mikeymeister\craftemailentries\models\EmailSettings;
 use yii\base\Component;
 
 /**
@@ -23,64 +22,60 @@ use yii\base\Component;
  */
 class Emails extends Component
 {
-    public function getEmailById(int $id): ?Email
+    public function findEntryForEmail($messageKey): ?Entry
     {
-        $query = $this->_createEmailQuery()
-            ->andWhere(Db::parseParam('emails.id',$id))
-            ->one();
-
-            if (!$query) {
-            return null;
+        $fields = $this->getAllEmailSettingsFields();
+        $entries = Entry::find();
+        foreach ($fields as $key => $value) {
+            $entries->andWhere(Db::parseParam('content.'.$value['columnName'], ':notempty:'));
         }
-        $email = new Email($query);
-        return $email;
-    }
+        $entries->all();
 
-    public function getEmailByKey(string $key): ?Email
-    {
-        $query = $this->_createEmailQuery()
-            ->andWhere(Db::parseParam('emails.systemMessageKey',$key))
-            ->one();
-
-        if (!$query) {
-            return null;
+        foreach ($entries as $entry) {
+            $emailSettingsHandle = $this->getEmailSettingsFieldHandle($entry);
+            if ($entry->getFieldValue($emailSettingsHandle)['messageKey'] == $messageKey) {
+                return $entry;
+            }
         }
-        $email = new Email($query);
-        return $email;
-    }
-
-    public function getEmailByEntryId(int $id, int $siteId): ?Email
-    {
-        // get the entry
-        $entry = Entry::find()
-            ->id($id)
-            ->siteId($siteId ?? '*')
-            ->one();
         
-        $query = $this->_createEmailQuery()
-            ->andWhere(Db::parseParam('emails.elementId',$entry->id))
-            ->andWhere(Db::parseParam('emails.siteId', $siteId ?? $entry->siteId))
-            ->one();
-
-        if (!$query) {
-            return null;
-        }
-        $email = new Email($query);
-        return $email;
+        return null;
     }
 
-    public function getEmailByEntry(Entry $entry): ?Email
+    public function getAllEmailSettingsFields(): array
     {
-        $query = $this->_createEmailQuery()
-            ->andWhere(Db::parseParam('emails.elementId', $entry->id))
-            ->andWhere(Db::parseParam('emails.siteId', $entry->siteId))
-            ->one();
 
-        if (!$query) {
-            return null;
+        $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
+        $fields = [];
+        foreach ($emailSettingsFields as $field) {
+            $columnName = '';
+            if ($field->columnPrefix) {
+                $columnName .= $field->columnPrefix . '_';
+            }
+            $columnName .= 'field_' . $field->handle;
+            if ($field->columnSuffix) {
+                $columnName .= '_' . $field->columnSuffix;
+            }
+            $fields[$field->handle] = [
+                'handle' => $field->handle,
+                'columnName' => $columnName
+            ];
         }
-        $email = new Email($query);
-        return $email;
+
+        return $fields;
+    }
+
+    public function getEmailSettingsFieldHandle(Entry $entry): ?string
+    {
+        $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
+        $emailSettingsFieldsHandles = array_column($emailSettingsFields, 'handle');
+        
+        foreach ($emailSettingsFieldsHandles as $handle) {
+            if (array_key_exists($handle, $entry->getFieldValues())) {
+                return $handle;
+            }
+        }
+        
+        return null;
     }
 
     public function getAllMessages(): array
@@ -117,82 +112,23 @@ class Emails extends Component
         }
         return null;
     }
-
-    public function saveEmailOnEntrySave($entry): bool 
-    {
-        $request = Craft::$app->getRequest();
-                    
-        $email = $this->getEmailByEntry($entry);
-
-        if (!$email) {
-            $email = new Email();
-            $email->siteId = $entry->siteId;
-            $email->elementId = $entry->id;
-        }
-        $email->systemMessageKey = $request->getBodyParam('system-message',$email->systemMessageKey);
-        $email->subject = $request->getBodyParam('subject',$email->subject );
-        $testVariables = $request->getBodyParam('testVariables', $email->testVariables);
-        if ($testVariables && !Json::isJsonObject($testVariables)) {
-            $testVariables = '';
-        }
-        $email->testVariables = $testVariables;
-        // Craft::dd($request->getBodyParams());
-        return $this->saveEmail($email);
-    }
-
-    public function saveEmail($model): bool
-    {
-        if ($model->id) {
-            $record = EmailRecord::findOne($model->id);
-            if (!$record) {
-                $record = new EmailRecord();            
-                $record->id = $model->id;
-            } 
-        } elseif ($model->elementId) {
-            $record = EmailRecord::findOne(['elementId' => $model->elementId]);
-            if (!$record) {
-                $record = new EmailRecord();
-                $record->elementId = $model->elementId;
-            }
-        } else {
-            $record = new EmailRecord(); 
-        }
-
-        $record->siteId = $model->siteId;
-        $record->elementId = $model->elementId;
-        $record->systemMessageKey = $model->systemMessageKey;
-        $record->subject =  $model->subject;
-        $record->testVariables = $model->testVariables ?? $record->testVariables ?? '';
-        $record->save();
-        return true;
-    }
     
     public function sendTestEmail($user, $id): bool
     {   
 		$settings = App::mailSettings();
         $entry = Entry::find()->id($id)->one();
-        $email = $this->getEmailById($id);
+        $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
+        $emailSettings = $entry->getFieldValue($fieldHandle);
         
-        if (!$email) {
-            $email = new Email();
-            $email->elementId = $entry->id;
-            $email->systemMessageKey = Craft::$app->getRequest()->getBodyParam('system-message');
-            $email->subject = Craft::$app->getRequest()->getBodyParam('subject','');
-            $testVariables = Craft::$app->getRequest()->getBodyParam('testVariables','');
-            if ($testVariables && !Json::isJsonObject($testVariables)) {
-                $testVariables = '';
-            }
-            $email->testVariables = $testVariables;
-            if(!$this->saveEmail($email)) {
-                return false;
-            }
-        }
 
         $variables['entry'] = $entry;
         $variables['recipient'] = $user;
+        $variables['order'] = $emailSettings['testOrderId'];
 
-        if ($email->testVariables) {
-            $rendered = Craft::$app->getView()->renderString($email->testVariables, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
+        $testVariables = $emailSettings['testVariables'];
+        
+        if ($testVariables) {
+            $rendered = Craft::$app->getView()->renderString($testVariables, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
             $testVariables = Json::decodeIfJson($rendered);
             if ($testVariables) {
                 foreach ($testVariables as $key => $value) {
@@ -205,7 +141,7 @@ class Emails extends Component
         $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);
         $message->setTo($user->email);
 
-        $message = $this->buildEmail($entry,$message,$email,$variables);
+        $message = $this->buildEmail($entry,$message,$variables);
 
         if ($message == false){   
             return false;
@@ -215,13 +151,16 @@ class Emails extends Component
         }
     }
 
-    public function buildEmail(Entry $entry, Message $message, Email $email, Array $variables): mixed
+    public function buildEmail(Entry $entry, Message $message, Array $variables): mixed
     {
-        if (!$this->_createSubjectLine($email,$variables,$message)) {
+
+        $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
+        $emailSettings = new EmailSettings($entry->getFieldValue($fieldHandle));
+        if (!$this->_createSubjectLine($emailSettings->subject,$variables,$message)) {
             return false;
         }
         
-        if (!$this->_createBody($entry,$variables,$message,$email)) {
+        if (!$this->_createBody($entry,$variables,$message)) {
             return false;
         }
         return $message;
@@ -231,44 +170,15 @@ class Emails extends Component
     // Private Methods
     // =========================================================================
 
-    /**
-     * Returns a Query object prepped for retrieving Emails.
-     *
-     * @return Query
-     */
-    private function _createEmailQuery(): Query
-    {
-        $now = DateTimeHelper::currentUTCDateTime();
-        return (new Query())
-            ->select([
-                'emails.id',
-                'emails.systemMessageKey',
-                'emails.subject',
-                'emails.testVariables',
-                'emails.elementId',
-                'emails.siteId'
-            ])
-            ->innerJoin(['elements' => Table::ELEMENTS], '[[emails.elementId]] = [[elements.id]]')
-            ->innerJoin(['elements_sites' => Table::ELEMENTS_SITES], '[[emails.elementId]] = [[elements_sites.elementId]]')
-            ->innerJoin(['entries' => Table::ENTRIES], '[[emails.elementId]] = [[entries.id]]')
-            ->where(Db::parseParam('elements_sites.siteId',Craft::$app->getSites()->currentSite->id))
-            ->andWhere(Db::parseParam('elements_sites.enabled',1))
-            ->andWhere(Db::parseParam('elements.dateDeleted',':empty:'))
-            ->andWhere(Db::parseDateParam('entries.postDate', $now, '<='))
-            ->andWhere(['or',Db::parseDateParam('entries.expiryDate', $now, '>'),Db::parseDateParam('entries.expiryDate', ':empty:')])
-            ->orderBy('entries.postDate')
-            ->from(['{{%email-entries_emails}} emails']);
-    }
-
-    private function _createSubjectLine($email,$variables,$message): bool
+    private function _createSubjectLine($subject,$variables,$message): bool
     {
         $view = Craft::$app->getView();
-        $subject = $view->renderString($email->subject, $variables, $view::TEMPLATE_MODE_SITE);
+        $subject = $view->renderString($subject, $variables, $view::TEMPLATE_MODE_SITE);
 
         try {
             $message->setSubject($subject);
         } catch (\Exception $e) {
-            $error = Craft::t('email-entries', 'Email template parse error for email “{email}” in “Subject:”. To: “{to}”. Template error: “{message}”', [
+            $error = Craft::t('email-entries', `Email template parse error for system message "{email}" in "Subject:". To: "{to}". Template error: "{message}"`, [
                 'email' => $message->key,
                 'to' => $message->getTo(),
                 'message' => $e->getMessage()
@@ -280,12 +190,12 @@ class Emails extends Component
         return true;
     }
 
-    private function _createBody($entry,$variables,$message,$email): bool
+    private function _createBody($entry,$variables,$message): bool
     {
         $view = Craft::$app->getView();
         $siteSettings = Craft::$app->getSections()->getSectionSiteSettings($entry->sectionId);
         foreach ($siteSettings as $setting) {
-            if ($setting['siteId'] == Craft::$app->getSites()->getCurrentSite()->id ) {
+            if ($setting['siteId'] == $entry->siteId ) {
                 $template = $setting['template'];
             }
         }
@@ -301,19 +211,19 @@ class Emails extends Component
 
             } catch (\Exception $e) {
                 $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
-                    'email' => $email->systemMessageKey,
+                    'email' => $message['key'],
                     'message' => $e->getMessage()
                 ]);
             }
             $message->setHtmlBody($htmlBody);
         } catch (\Exception $e) {
             $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to set bodyHtml. Template error: {message}', [
-                'email' => $email->systemMessageKey,
+                'email' => $message['key'],
                 'message' => $e->getMessage()
             ]);
             return false;
         }
-           
+        //   Craft::dd($htmlBody); 
         return true;
     }
 }
