@@ -4,6 +4,7 @@ namespace mikeymeister\craftemailentries\models;
 
 use Craft;
 use craft\base\Model;
+use craft\commerce\elements\Order;
 use craft\elements\User;
 use craft\models\SystemMessage;
 
@@ -16,7 +17,7 @@ class EmailSettings extends Model
     public string $subject = '';
     public string $testVariables = '';
     public ?int $testUserId = null;
-    public ?int $testOrderId = null;
+    public array $testOrderId = [];
 
     protected function defineRules(): array
     {
@@ -41,7 +42,7 @@ class EmailSettings extends Model
     public function getTestOrder(): ?\craft\commerce\elements\Order
     {
         $order = null;
-        if ($this->testOrderId) {
+        if (!empty($this->testOrderId)) {
             $order = Order::find()->id($this->testOrderId)->one();
         }
 

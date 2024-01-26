@@ -9,6 +9,7 @@ use craft\elements\db\ElementQueryInterface;
 use craft\helpers\Html;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
+use mikeymeister\craftemailentries\EmailEntries;
 use mikeymeister\craftemailentries\models\EmailSettings as ModelsEmailSettings;
 use yii\db\Schema;
 
@@ -22,7 +23,7 @@ class EmailSettings extends Field
     public string $subject = '';
     public string $testVariables = '';
     public ?int $testUserId = null;
-    public ?int $testOrderId = null;
+    public array $testOrderId = [];
 
     public static function displayName(): string
     {
@@ -69,10 +70,10 @@ class EmailSettings extends Field
 
     protected function inputHtml(mixed $value, ElementInterface $element = null): string
     {
-        $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->pluck('heading', 'key')->all();
-
+        $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map( function ($m) { $m['heading'] = str_replace(':','',$m['heading']); return $m;})->pluck('heading', 'key')->all();
+        $commerceEmails = EmailEntries::getInstance()->emails->getAllCommerceEmails();
+        $messageOptions = array_merge($systemMessages,$commerceEmails);
         $view = Craft::$app->getView();
-
         // Register our asset bundle
         // $view->registerAssetBundle(FieldAsset::class);
 
@@ -90,7 +91,7 @@ class EmailSettings extends Field
         // $jsonVars = Json::encode($jsonVars);
         // $view->registerJs("$('#{$namespacedId}-field').ListingSourceField(" . $jsonVars . ");");
         $values = new ModelsEmailSettings($value ?? []);
-        // Craft::dd($values);
+
         // Render the input template
         return $view->renderTemplate(
             'email-entries/settings-field',
@@ -100,11 +101,11 @@ class EmailSettings extends Field
                 'subject' => $values->subject,
                 'messageKey' => $values->messageKey,
                 'testVariables' => $values->testVariables,
-                'testOrderId' => $values->testOrderId,
+                'testOrder' => $values->getTestOrder(),
                 //'type' => $value['type'],
                 //'value' => $value['value'],
                 //   d'element' => $element,
-                'options' => $systemMessages,
+                'options' => $messageOptions,
                 'element' => $element,
                 'field' => $this,
                 'id' => $id,

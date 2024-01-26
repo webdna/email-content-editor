@@ -197,13 +197,12 @@ class EmailEntries extends Plugin
 
     private function _attachCommerceEventHandlers()
     {
-        if (class_exists('craft\\commerce\\services\\Emails')) {
             Event::on(
                 CommerceEmails::class, 
                 CommerceEmails::EVENT_BEFORE_SEND_MAIL,
                 function(MailEvent $e) {
                     //Get the Email Editor Model Associated with the Commerce Email Event
-                    $email = EmailEntries::getInstance()->getEmails()->getEmailByKey('commerceEmail'.$e->commerceEmail->id);
+                    $email = EmailEntries::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
     
                     if ($email) {  
                         $toEmailArr = array_keys($e->craftEmail->getTo());
@@ -225,11 +224,11 @@ class EmailEntries extends Plugin
                             $variables['entry'] = $entry;
                             $variables['order'] = $e->order;
                             $variables['orderHistory'] = $e->orderHistory;
-                            $e->craftEmail = EmailEntries::getInstance()->getEmails()->buildEmail($entry,$e->craftEmail,$email,$variables);
+                            $e->craftEmail = EmailEntries::getInstance()->emails->buildEmail($entry,$e->craftEmail,$variables);
                         }
                     }
                 }
             );
-        }
+        
     }
 }

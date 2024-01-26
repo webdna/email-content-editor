@@ -78,17 +78,6 @@ class Emails extends Component
         return null;
     }
 
-    public function getAllMessages(): array
-    {
-        $emails = [];
-        $systemEmails = Craft::$app->getSystemMessages()->getAllMessages();
-        foreach ($systemEmails as $systemEmail) {
-            $emails[$systemEmail->key] = ucwords(str_replace('_',' ',$systemEmail->key));
-        }
-        $emails += $this->getAllCommerceEmails();
-        return $emails;
-    }
-
     public function getAllCommerceEmails(): array
     {
         $emails = [];
@@ -96,7 +85,7 @@ class Emails extends Component
             $commerceEmails = \craft\commerce\Plugin::getInstance()->getEmails()->getAllEmails();
             if ($commerceEmails) {
                 foreach ($commerceEmails as $commerceEmail) {
-                    $emails['commerceEmail'.$commerceEmail->id] = $commerceEmail->name;
+                    $emails['commerceEmail'.$commerceEmail->id] = $commerceEmail->name . " (Commerce)";
                 }
             }
         } 
