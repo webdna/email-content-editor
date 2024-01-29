@@ -2,6 +2,7 @@
     "name": "mikeymeister/craft-email-entries",
     "description": "A Craft CMS plugin to turn entries into emails",
     "type": "craft-plugin",
+    "version": "1.0.2",
     "license": "mit",
     "support": {
         "issues": "https://github.com/mikeymeister/email-entries/issues?state=open",

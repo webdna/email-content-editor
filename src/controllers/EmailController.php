@@ -21,7 +21,7 @@ class EmailController extends Controller
     public function actionSendEmail(): ?Response
     {
         $this->requireLogin();
-
+        $this->requirePermission('testEmails');
         $user = $this->request->getBodyParam('testUser',null);
         $id = $this->request->getBodyParam('elementId', null);
         $siteId = $this->request->getBodyParam('siteId',null);

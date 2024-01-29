@@ -24,7 +24,7 @@ class Emails extends Component
 {
     public function findEntryForEmail($messageKey): ?Entry
     {
-        $fields = $this->getAllEmailSettingsFields();
+        $fields = $this->getAllEmailSettingsFieldsColumnNames();
         $entries = Entry::find();
         foreach ($fields as $key => $value) {
             $entries->andWhere(Db::parseParam('content.'.$value['columnName'], ':notempty:'));
@@ -41,7 +41,7 @@ class Emails extends Component
         return null;
     }
 
-    public function getAllEmailSettingsFields(): array
+    public function getAllEmailSettingsFieldsColumnNames(): array
     {
 
         $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
@@ -101,6 +101,21 @@ class Emails extends Component
         }
         return null;
     }
+
+    public function mergeTestVariables(string $testVariables, array $context): array 
+    {
+        if ($testVariables) {
+            $rendered = Craft::$app->getView()->renderString($testVariables, $context, Craft::$app->getView()::TEMPLATE_MODE_SITE);
+            $testVariables = Json::decodeIfJson($rendered);
+            if ($testVariables) {
+                foreach ($testVariables as $key => $value) {
+                    $context[$key] = $value;
+                }
+            }
+        }
+
+        return $context;
+    }
     
     public function sendTestEmail($user, $id): bool
     {   
@@ -115,16 +130,7 @@ class Emails extends Component
         $variables['order'] = $emailSettings['testOrderId'];
 
         $testVariables = $emailSettings['testVariables'];
-        
-        if ($testVariables) {
-            $rendered = Craft::$app->getView()->renderString($testVariables, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
-            $testVariables = Json::decodeIfJson($rendered);
-            if ($testVariables) {
-                foreach ($testVariables as $key => $value) {
-                    $variables[$key] = $value;
-                }
-            }
-        }
+        $variables = $this->mergeTestVariables($testVariables, $variables);
 
         $message = new Message;
         $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);

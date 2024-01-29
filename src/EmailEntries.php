@@ -2,24 +2,28 @@
 
 namespace mikeymeister\craftemailentries;
 
+use mikeymeister\craftemailentries\fields\EmailSettings;
+use mikeymeister\craftemailentries\models\Settings;
+use mikeymeister\craftemailentries\services\Emails;
+
+use craft\commerce\events\MailEvent;
+use craft\commerce\services\Emails as CommerceEmails;
+
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
-use craft\commerce\events\MailEvent;
-use craft\commerce\services\Emails as CommerceEmails;
 use craft\elements\Entry;
 use craft\events\DefineHtmlEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterEmailMessagesEvent;
 use craft\events\RegisterUserPermissionsEvent;
+use craft\events\TemplateEvent;
 use craft\mail\Mailer;
 use craft\services\Fields;
 use craft\services\SystemMessages;
 use craft\services\UserPermissions;
 use craft\web\View;
-use mikeymeister\craftemailentries\fields\EmailSettings;
-use mikeymeister\craftemailentries\models\Settings;
-use mikeymeister\craftemailentries\services\Emails;
+
 use yii\base\Event;
 
 /**
@@ -67,11 +71,13 @@ class EmailEntries extends Plugin
 
     protected function settingsHtml(): ?string
     {
+        if (!Craft::$app->user->checkPermission('manageEmailEntriesSettings')) {
+            return '';
+        }
         return \Craft::$app->getView()->renderTemplate(
             'email-entries/settings',
             [ 
                 'settings' => $this->getSettings(),
-                // 'allSections' => $allSections
             ]
         );
     }
@@ -88,14 +94,8 @@ class EmailEntries extends Plugin
                         'setTestVariables' => [
                             'label' => 'Set Test Variables',
                         ],
-                        'manageSettings' => [
+                        'manageEmailEntriesSettings' => [
                             'label' => 'Manage Plugin Settings'
-                        ],
-                        'editEmails' => [
-                            'label' => 'Edit Entries\' Email Settings'
-                        ],
-                        'manageTestVars' => [
-                            'label' => 'Manage Test Code for Emails'
                         ],
                         'testEmails' => [
                             'label' => 'Send Test Emails'
@@ -119,6 +119,7 @@ class EmailEntries extends Plugin
                 $entry = $event->sender;
                 if ($event->static !== true 
                     && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($entry)
+                    && Craft::$app->user->checkPermission('testEmails')
                 ) {
                     $event->html .= Craft::$app->getView()->renderTemplate('email-entries/button', [
                         'entry'=>$entry,
@@ -128,28 +129,23 @@ class EmailEntries extends Plugin
             }
         );
 
-        // Event::on(
-        //     View::class,
-        //     View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE,
-        //     function(TemplateEvent $e) {
-        //         if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
-        //             if (
-        //                 array_key_exists('entry',$e->variables) 
-        //                 && in_array($e->variables['entry']->sectionId, $this->getSettings()->sectionIds) 
-        //                 && Craft::$app->user->checkPermission('testEmails')
-        //             ) {
-        //                 $email = EmailEntries::getInstance()->emails->getEmailByEntry($e->variables['entry']);
-                        
-        //                 if ($email && $email->testVariables) {
-        //                     // Maybe there is twig in there
-        //                     $rendered = Craft::$app->getView()->renderString($email->testVariables, [], View::TEMPLATE_MODE_SITE);
-        //                     $e->variables['testVariables'] = Json::decodeIfJson($rendered);
-        //                     $e->variables['variables']['testVariables'] = $e->variables['testVariables'];
-        //                 }
-        //             }
-        //         }
-        //     }
-        // );
+        Event::on(
+            View::class,
+            View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE,
+            function(TemplateEvent $e) {
+                if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
+                    if (
+                        array_key_exists('entry',$e->variables) 
+                        && $settingsFieldHandle = EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                    ) {
+                        $entry = $e->variables['entry'];
+                        $testVariables = $entry->getFieldValue($settingsFieldHandle)['testVariables'];                        
+                        $variables = EmailEntries::getInstance()->emails->mergeTestVariables($testVariables,$e->variables);
+                        $e->variables = $variables;
+                    }
+                }
+            }
+        );
 
         Event::on(
             Mailer::class,
