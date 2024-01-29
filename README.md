@@ -29,7 +29,7 @@ Open your terminal and run the following commands:
 cd /path/to/my-project.test
 
 # tell Composer to load the plugin
-composer require mikeymeister/craft-email-entries
+composer require webdna/craft-email-entries
 
 # tell Craft to install the plugin
 ./craft plugin/install email-entries

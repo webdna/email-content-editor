@@ -1,6 +1,6 @@
 <?php
 
-namespace mikeymeister\craftemailentries\models;
+namespace webdna\craftemailentries\models;
 
 use Craft;
 use craft\base\Model;

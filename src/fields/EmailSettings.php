@@ -1,16 +1,17 @@
 <?php
 
-namespace mikeymeister\craftemailentries\fields;
+namespace webdna\craftemailentries\fields;
+
+use webdna\craftemailentries\EmailEntries;
+use webdna\craftemailentries\models\EmailSettings as ModelsEmailSettings;
 
 use Craft;
 use craft\base\ElementInterface;
 use craft\base\Field;
 use craft\elements\db\ElementQueryInterface;
-use craft\helpers\Html;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
-use mikeymeister\craftemailentries\EmailEntries;
-use mikeymeister\craftemailentries\models\EmailSettings as ModelsEmailSettings;
+
 use yii\db\Schema;
 
 /**

@@ -1,9 +1,9 @@
 <?php
 
-namespace mikeymeister\craftemailentries\services;
+namespace webdna\craftemailentries\services;
 
-use mikeymeister\craftemailentries\models\Email;
-use mikeymeister\craftemailentries\records\Email as EmailRecord;
+use webdna\craftemailentries\fields\EmailSettings as FieldsEmailSettings;
+use webdna\craftemailentries\models\EmailSettings;
 
 
 use Craft;
@@ -13,8 +13,6 @@ use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\mail\Message;
 use craft\models\SystemMessage;
-use mikeymeister\craftemailentries\fields\EmailSettings as FieldsEmailSettings;
-use mikeymeister\craftemailentries\models\EmailSettings;
 use yii\base\Component;
 
 /**

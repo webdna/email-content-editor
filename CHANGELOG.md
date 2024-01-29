@@ -1,5 +1,8 @@
 # Release Notes for Email Entries
 
+## 1.0.3 29/01/24
+- Change repo ownership and namespace
+
 ## 1.0.2 29/01/24
 - Re-introduce permissions
 - Add test variables to template renders/live preview

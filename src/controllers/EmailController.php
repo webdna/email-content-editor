@@ -1,10 +1,12 @@
 <?php
 
-namespace mikeymeister\craftemailentries\controllers;
+namespace webdna\craftemailentries\controllers;
+
+use webdna\craftemailentries\EmailEntries;
 
 use Craft;
 use craft\web\Controller;
-use mikeymeister\craftemailentries\EmailEntries;
+
 use yii\web\Response;
 
 /**

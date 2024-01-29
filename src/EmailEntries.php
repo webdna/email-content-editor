@@ -1,10 +1,10 @@
 <?php
 
-namespace mikeymeister\craftemailentries;
+namespace webdna\craftemailentries;
 
-use mikeymeister\craftemailentries\fields\EmailSettings;
-use mikeymeister\craftemailentries\models\Settings;
-use mikeymeister\craftemailentries\services\Emails;
+use webdna\craftemailentries\fields\EmailSettings;
+use webdna\craftemailentries\models\Settings;
+use webdna\craftemailentries\services\Emails;
 
 use craft\commerce\events\MailEvent;
 use craft\commerce\services\Emails as CommerceEmails;
@@ -30,8 +30,8 @@ use yii\base\Event;
  * Email Entries plugin
  *
  * @method static EmailEntries getInstance()
- * @author mikeymeister
- * @copyright mikeymeister
+ * @author webdna
+ * @copyright webdna
  * @license MIT
  * @property-read Emails $emails
  */
