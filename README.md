@@ -1,3 +1,5 @@
+<p align="center"><img src="./src/icon.svg" width="100" height="100" alt="Feed Me icon"></p>
+
 # Email Entries
 
 A Craft CMS plugin to turn entries into emails.

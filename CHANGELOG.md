@@ -1,5 +1,8 @@
 # Release Notes for Email Entries
 
+## 1.0.4 29/01/24
+- Added icons
+
 ## 1.0.3 29/01/24
 - Change repo ownership and namespace
 
