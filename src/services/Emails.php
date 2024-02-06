@@ -125,7 +125,13 @@ class Emails extends Component
 
         $variables['entry'] = $entry;
         $variables['recipient'] = $user;
-        $variables['order'] = $emailSettings['testOrderId'];
+        if (
+            Craft::$app->getPlugins()->isPluginEnabled('commerce') 
+            && array_key_exists('testOrderId', $emailSettings)
+            ) 
+        {
+            $variables['order'] = $emailSettings['testOrderId'];
+        }
 
         $testVariables = $emailSettings['testVariables'];
         $variables = $this->mergeTestVariables($testVariables, $variables);
