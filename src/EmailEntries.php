@@ -56,8 +56,9 @@ class EmailEntries extends Plugin
         Craft::$app->onInit(function() {
             $this->_registerPermissions();
             $this->_attachEventHandlers();
-            $this->_attachCommerceEventHandlers();
-            // ...
+            if (Craft::$app->getPlugins()->isPluginEnabled('commerce')) {
+                $this->_attachCommerceEventHandlers();
+            }
         });
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function (RegisterComponentTypesEvent $event) {
             $event->types[] = EmailSettings::class;
