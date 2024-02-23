@@ -2,7 +2,7 @@
     "name": "webdna/craft-email-entries",
     "description": "A Craft CMS plugin to turn entries into emails",
     "type": "craft-plugin",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "license": "mit",
     "support": {
         "issues": "https://github.com/webdna/email-entries/issues?state=open",

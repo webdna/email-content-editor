@@ -7,6 +7,7 @@ use webdna\craftemailentries\models\EmailSettings;
 
 
 use Craft;
+use craft\commerce\elements\Order;
 use craft\elements\Entry;
 use craft\helpers\App;
 use craft\helpers\Db;
@@ -100,8 +101,18 @@ class Emails extends Component
         return null;
     }
 
-    public function mergeTestVariables(string $testVariables, array $context): array 
+    public function mergeTestVariables(array $emailSettings, array $context): array 
     {
+        $testVariables = $emailSettings['testVariables'];
+
+        if (
+            Craft::$app->getPlugins()->isPluginEnabled('commerce') 
+            && array_key_exists('testOrderId', $emailSettings)
+            ) 
+        {
+            $context['order'] = $this->getTestOrder($emailSettings['testOrderId']);
+        }
+
         if ($testVariables) {
             $rendered = Craft::$app->getView()->renderString($testVariables, $context, Craft::$app->getView()::TEMPLATE_MODE_SITE);
             $testVariables = Json::decodeIfJson($rendered);
@@ -119,6 +130,18 @@ class Emails extends Component
     {
         return Craft::$app->getView()->renderString($output, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
     }
+
+    public function getTestOrder(array $ids): ?Order
+    {
+
+        if (empty($ids)) {
+            return null;
+        }
+
+        return Order::find()
+            ->id($ids)
+            ->one();
+    }
     
     public function sendTestEmail($user, $id): bool
     {   
@@ -135,11 +158,10 @@ class Emails extends Component
             && array_key_exists('testOrderId', $emailSettings)
             ) 
         {
-            $variables['order'] = $emailSettings['testOrderId'];
+            $variables['order'] = $this->getTestOrder($emailSettings['testOrderId']);
         }
 
-        $testVariables = $emailSettings['testVariables'];
-        $variables = $this->mergeTestVariables($testVariables, $variables);
+        $variables = $this->mergeTestVariables($emailSettings, $variables);
 
         $message = new Message;
         $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);
@@ -160,13 +182,8 @@ class Emails extends Component
 
         $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
         $emailSettings = new EmailSettings($entry->getFieldValue($fieldHandle));
-        if (!$this->_createSubjectLine($emailSettings->subject,$variables,$message)) {
-            return false;
-        }
-        
-        if (!$this->_createBody($entry,$variables,$message)) {
-            return false;
-        }
+        $this->_createSubjectLine($emailSettings->subject,$variables,$message);
+        $this->_createBody($entry,$variables,$message);
         return $message;
     }
 
@@ -174,7 +191,7 @@ class Emails extends Component
     // Private Methods
     // =========================================================================
 
-    private function _createSubjectLine($subject,$variables,$message): bool
+    private function _createSubjectLine($subject,$variables,$message): void
     {
         $view = Craft::$app->getView();
         $subject = $view->renderString($subject, $variables, $view::TEMPLATE_MODE_SITE);
@@ -188,13 +205,12 @@ class Emails extends Component
                 'message' => $e->getMessage()
             ]);
             Craft::error($error, __METHOD__);
-            return false;
         }
             
-        return true;
+        return;
     }
 
-    private function _createBody($entry,$variables,$message): bool
+    private function _createBody($entry,$variables,$message): void
     {
         $view = Craft::$app->getView();
         $siteSettings = Craft::$app->getSections()->getSectionSiteSettings($entry->sectionId);
@@ -204,7 +220,7 @@ class Emails extends Component
             }
         }
         if (!$template) {
-            return false;
+            return;
         }
         
         try {
@@ -215,19 +231,20 @@ class Emails extends Component
 
             } catch (\Exception $e) {
                 $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
-                    'email' => $message['key'],
+                    'email' => $message->key,
                     'message' => $e->getMessage()
                 ]);
+                Craft::error($error, __METHOD__);
             }
             $message->setHtmlBody($htmlBody);
         } catch (\Exception $e) {
             $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to set bodyHtml. Template error: {message}', [
-                'email' => $message['key'],
+                'email' => $message->key,
                 'message' => $e->getMessage()
             ]);
-            return false;
+            Craft::error($error, __METHOD__);
         }
         //   Craft::dd($htmlBody); 
-        return true;
+        return;
     }
 }

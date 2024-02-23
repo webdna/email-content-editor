@@ -1,5 +1,8 @@
 # Release Notes for Email Entries
 
+## 1.0.7 23/02/24
+- Improve error handling after template rendering. Some more fixes for Commerce 4.
+
 ## 1.0.6 23/02/24
 - Render twig variables in custom fields when viewing the entry on the front end or in live preview.
 

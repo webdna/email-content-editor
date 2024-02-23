@@ -140,8 +140,8 @@ class EmailEntries extends Plugin
                         && $settingsFieldHandle = EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                     ) {
                         $entry = $e->variables['entry'];
-                        $testVariables = $entry->getFieldValue($settingsFieldHandle)['testVariables'];                        
-                        $variables = EmailEntries::getInstance()->emails->mergeTestVariables($testVariables,$e->variables);
+                        $emailSettings = $entry->getFieldValue($settingsFieldHandle);  
+                        $variables = EmailEntries::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
                         $e->variables = $variables;
                     }
                 }
@@ -211,10 +211,9 @@ class EmailEntries extends Plugin
                 CommerceEmails::class, 
                 CommerceEmails::EVENT_BEFORE_SEND_MAIL,
                 function(MailEvent $e) {
-                    //Get the Email Editor Model Associated with the Commerce Email Event
-                    $email = EmailEntries::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
-    
-                    if ($email) {  
+                    //Get the Email Entry Associated with the Commerce Email Event
+                    $emailEntry = EmailEntries::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
+                    if ($emailEntry) {  
                         $toEmailArr = array_keys($e->craftEmail->getTo());
                         $toEmail = array_pop($toEmailArr);
                         $user = Craft::$app->users->getUserByUsernameOrEmail($toEmail);
@@ -225,16 +224,13 @@ class EmailEntries extends Plugin
                                 'friendlyName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0]
                             ];
                         }
-                        $entry = Entry::find()
-                            ->id($email->id)
-                            ->siteId($email->siteId)
-                            ->one();
-                        if($entry) {
+                        
+                        if($emailEntry) {
                             $variables['recipient'] = $user;
-                            $variables['entry'] = $entry;
+                            $variables['entry'] = $emailEntry;
                             $variables['order'] = $e->order;
                             $variables['orderHistory'] = $e->orderHistory;
-                            $e->craftEmail = EmailEntries::getInstance()->emails->buildEmail($entry,$e->craftEmail,$variables);
+                            $e->craftEmail = EmailEntries::getInstance()->emails->buildEmail($emailEntry,$e->craftEmail,$variables);
                         }
                     }
                 }
