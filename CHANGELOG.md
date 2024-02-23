@@ -1,5 +1,11 @@
 # Release Notes for Email Entries
 
+## 1.0.6 23/02/24
+- Render twig variables in custom fields when viewing the entry on the front end or in live preview.
+
+## 1.0.5 06/02/24
+- Fix for when craft commerce is not installed
+
 ## 1.0.4 29/01/24
 - Added icons
 

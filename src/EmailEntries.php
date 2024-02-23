@@ -149,6 +149,19 @@ class EmailEntries extends Plugin
         );
 
         Event::on(
+            View::class,
+            View::EVENT_AFTER_RENDER_PAGE_TEMPLATE,
+            function (TemplateEvent $e) {
+                if (
+                    array_key_exists('entry',$e->variables) 
+                    && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                ) {
+                    $e->output = EmailEntries::getInstance()->emails->reRenderTemplateForTwig($e->output, $e->variables);
+                }
+            }
+        );
+
+        Event::on(
             Mailer::class,
             Mailer::EVENT_BEFORE_SEND,
             function(Event $event) {

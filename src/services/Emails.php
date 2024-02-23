@@ -114,6 +114,11 @@ class Emails extends Component
 
         return $context;
     }
+
+    public function reRenderTemplateForTwig(string $output, array $variables): string
+    {
+        return Craft::$app->getView()->renderString($output, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
+    }
     
     public function sendTestEmail($user, $id): bool
     {   
