@@ -1,5 +1,9 @@
 # Release Notes for Email Entries
 
+## 1.0.8 26/02/24
+- Fixed a type error bug when no test order was set for commerce emails
+- Improved spacing of email settings field 
+
 ## 1.0.7 23/02/24
 - Improve error handling after template rendering. Some more fixes for Commerce 4.
 

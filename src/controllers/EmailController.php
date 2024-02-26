@@ -24,7 +24,6 @@ class EmailController extends Controller
     {
         $this->requireLogin();
         $this->requirePermission('testEmails');
-        $user = $this->request->getBodyParam('testUser',null);
         $id = $this->request->getBodyParam('elementId', null);
         $siteId = $this->request->getBodyParam('siteId',null);
 
@@ -37,15 +36,12 @@ class EmailController extends Controller
         if (!$siteId) {
             $siteId = Craft::$app->getSites()->getCurrentSite()->id;
         }
-        if (!$user) {
-            $user = Craft::$app->getUser()->getIdentity(); 
-        }
         if (!Craft::$app->getUser()->checkPermission('testEmails')) {
             return $this->asFailure(
                 "User does not have sufficient priviledges to send test email."
             );
         } else {
-            $sent = EmailEntries::getInstance()->emails->sendTestEmail($user,$id);
+            $sent = EmailEntries::getInstance()->emails->sendTestEmail($id);
             if ($sent) {
                 Craft::$app->getSession()->setNotice("Email sent successfully");
                 return $this->asSuccess(

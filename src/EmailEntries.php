@@ -3,6 +3,7 @@
 namespace webdna\craftemailentries;
 
 use webdna\craftemailentries\fields\EmailSettings;
+use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
 use webdna\craftemailentries\models\Settings;
 use webdna\craftemailentries\services\Emails;
 
@@ -23,7 +24,6 @@ use craft\services\Fields;
 use craft\services\SystemMessages;
 use craft\services\UserPermissions;
 use craft\web\View;
-
 use yii\base\Event;
 
 /**
@@ -140,7 +140,7 @@ class EmailEntries extends Plugin
                         && $settingsFieldHandle = EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                     ) {
                         $entry = $e->variables['entry'];
-                        $emailSettings = $entry->getFieldValue($settingsFieldHandle);  
+                        $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
                         $variables = EmailEntries::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
                         $e->variables = $variables;
                     }

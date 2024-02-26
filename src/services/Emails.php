@@ -3,7 +3,7 @@
 namespace webdna\craftemailentries\services;
 
 use webdna\craftemailentries\fields\EmailSettings as FieldsEmailSettings;
-use webdna\craftemailentries\models\EmailSettings;
+use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
 
 
 use Craft;
@@ -101,16 +101,16 @@ class Emails extends Component
         return null;
     }
 
-    public function mergeTestVariables(array $emailSettings, array $context): array 
+    public function mergeTestVariables(EmailSettingsModel $emailSettings, array $context): array 
     {
-        $testVariables = $emailSettings['testVariables'];
+        $testVariables = $emailSettings->testVariables;
 
         if (
             Craft::$app->getPlugins()->isPluginEnabled('commerce') 
-            && array_key_exists('testOrderId', $emailSettings)
+            && !empty($emailSettings->testOrderId)
             ) 
         {
-            $context['order'] = $this->getTestOrder($emailSettings['testOrderId']);
+            $context['order'] = $emailSettings->getTestOrder();
         }
 
         if ($testVariables) {
@@ -130,42 +130,30 @@ class Emails extends Component
     {
         return Craft::$app->getView()->renderString($output, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
     }
-
-    public function getTestOrder(array $ids): ?Order
-    {
-
-        if (empty($ids)) {
-            return null;
-        }
-
-        return Order::find()
-            ->id($ids)
-            ->one();
-    }
     
-    public function sendTestEmail($user, $id): bool
+    public function sendTestEmail(int $id): bool
     {   
 		$settings = App::mailSettings();
         $entry = Entry::find()->id($id)->one();
         $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
-        $emailSettings = $entry->getFieldValue($fieldHandle);
+        $emailSettings = new EmailSettingsModel($entry->getFieldValue($fieldHandle));
         
 
         $variables['entry'] = $entry;
-        $variables['recipient'] = $user;
+        $variables['recipient'] = $emailSettings->getTestUser();
         if (
             Craft::$app->getPlugins()->isPluginEnabled('commerce') 
-            && array_key_exists('testOrderId', $emailSettings)
+            && !empty($emailSettings->testOrderId)
             ) 
         {
-            $variables['order'] = $this->getTestOrder($emailSettings['testOrderId']);
+            $variables['order'] = $emailSettings->getTestOrder();
         }
 
         $variables = $this->mergeTestVariables($emailSettings, $variables);
 
         $message = new Message;
         $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);
-        $message->setTo($user->email);
+        $message->setTo($emailSettings->getTestUser()->email);
 
         $message = $this->buildEmail($entry,$message,$variables);
 
@@ -181,7 +169,7 @@ class Emails extends Component
     {
 
         $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
-        $emailSettings = new EmailSettings($entry->getFieldValue($fieldHandle));
+        $emailSettings = new EmailSettingsModel($entry->getFieldValue($fieldHandle));
         $this->_createSubjectLine($emailSettings->subject,$variables,$message);
         $this->_createBody($entry,$variables,$message);
         return $message;
