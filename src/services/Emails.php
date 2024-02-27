@@ -8,6 +8,7 @@ use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
 
 use Craft;
 use craft\commerce\elements\Order;
+use craft\commerce\Plugin;
 use craft\elements\Entry;
 use craft\helpers\App;
 use craft\helpers\Db;
@@ -105,12 +106,17 @@ class Emails extends Component
     {
         $testVariables = $emailSettings->testVariables;
 
+        $context['recipient'] = $emailSettings->getTestUser();
+
         if (
             Craft::$app->getPlugins()->isPluginEnabled('commerce') 
             && !empty($emailSettings->testOrderId)
             ) 
         {
-            $context['order'] = $emailSettings->getTestOrder();
+            $order = $emailSettings->getTestOrder();
+            $context['order'] = $order;
+            $context['orderHistory'] = craft\commerce\Plugin::getInstance()->getOrderHistories()->createOrderHistoryFromOrder($order,null);
+            $context['recipient'] = $order->customer;
         }
 
         if ($testVariables) {
@@ -140,15 +146,6 @@ class Emails extends Component
         
 
         $variables['entry'] = $entry;
-        $variables['recipient'] = $emailSettings->getTestUser();
-        if (
-            Craft::$app->getPlugins()->isPluginEnabled('commerce') 
-            && !empty($emailSettings->testOrderId)
-            ) 
-        {
-            $variables['order'] = $emailSettings->getTestOrder();
-        }
-
         $variables = $this->mergeTestVariables($emailSettings, $variables);
 
         $message = new Message;

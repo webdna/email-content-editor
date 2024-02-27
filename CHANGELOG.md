@@ -1,5 +1,9 @@
 # Release Notes for Email Entries
 
+## 1.0.9 27/02/24
+- Include orderHistory variable in commerce testVariables
+- Fixed situation where recipient variable might be missing from testing scenarios 
+
 ## 1.0.8 26/02/24
 - Fixed a type error bug when no test order was set for commerce emails
 - Improved spacing of email settings field 
