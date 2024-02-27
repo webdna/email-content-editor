@@ -1,5 +1,10 @@
 # Release Notes for Email Entries
 
+## 1.0.11 27/02/24
+- Fix bug with plugin settings
+- Remove some unused classes
+- Add an example config.php file
+
 ## 1.0.10 27/02/24
 - Fix margin above subject field
 

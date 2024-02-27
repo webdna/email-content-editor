@@ -2,7 +2,6 @@
 
 {% set title = 'Email Entries' %}
 {% import "_includes/forms" as forms %}
-{% set cpHelper = create('craft\\helpers\\Cp') %}
 
 <div class="heading" style="margin-top: 2rem;">
     <label id="title-label" for="title">
@@ -11,29 +10,29 @@
 </div>
 
 {{ forms.editableTable({
-    'instructions': 'Set Custom Emails.'|t('email-editor'),
-    'id': 'customEmails',
-    'name': 'customEmails',
+    'instructions': 'Set Custom Emails.'|t('email-entries'),
+    'id': 'customSystemMessages',
+    'name': 'customSystemMessages',
     'staticRows':false,
     'allowAdd': true,
     'allowDelete': true,
     'allowReorder': true,
-    'addRowLabel': 'Add Custom Email'|t('email-editor'),
+    'addRowLabel': 'Add Custom Email'|t('email-entries'),
     'cols': {
         'key': {
-            'heading': 'Key'|t('email-editor'),
+            'heading': 'Key'|t('email-entries'),
             'type': 'singleline'
         },
         'heading': {
-            'heading': 'Default Heading'|t('email-editor'),
+            'heading': 'Default Heading'|t('email-entries'),
             'type': 'singleline'
         },
         'subject': {
-            'heading': 'Default Subject'|t('email-editor'),
+            'heading': 'Default Subject'|t('email-entries'),
             'type': 'singleline',
         },
         'body': {
-            'heading': 'Default Body'|t('email-editor'),
+            'heading': 'Default Body'|t('email-entries'),
             'type': 'multiline',
         }
     }, 

@@ -7,8 +7,6 @@ use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
 
 
 use Craft;
-use craft\commerce\elements\Order;
-use craft\commerce\Plugin;
 use craft\elements\Entry;
 use craft\helpers\App;
 use craft\helpers\Db;
