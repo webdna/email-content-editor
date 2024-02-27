@@ -1,5 +1,8 @@
 # Release Notes for Email Entries
 
+## 1.0.10 27/02/24
+- Fix margin above subject field
+
 ## 1.0.9 27/02/24
 - Include orderHistory variable in commerce testVariables
 - Fixed situation where recipient variable might be missing from testing scenarios 
