@@ -112,8 +112,9 @@ class Emails extends Component
             ) 
         {
             $order = $emailSettings->getTestOrder();
+            $orderHistory = $emailSettings->getTestOrderHistory();
             $context['order'] = $order;
-            $context['orderHistory'] = craft\commerce\Plugin::getInstance()->getOrderHistories()->createOrderHistoryFromOrder($order,null);
+            $context['orderHistory'] = $orderHistory; 
             $context['recipient'] = $order->customer;
         }
 
@@ -142,7 +143,6 @@ class Emails extends Component
         $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
         $emailSettings = new EmailSettingsModel($entry->getFieldValue($fieldHandle));
         
-
         $variables['entry'] = $entry;
         $variables = $this->mergeTestVariables($emailSettings, $variables);
 
@@ -155,8 +155,7 @@ class Emails extends Component
         if ($message == false){   
             return false;
         } else {
-            Craft::$app->mailer->send($message);
-            return true;
+            return Craft::$app->mailer->send($message);
         }
     }
 

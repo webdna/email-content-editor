@@ -22,7 +22,8 @@ class EmailSettings extends Model
     protected function defineRules(): array
     {
         return array_merge(parent::defineRules(), [
-            [['systemMessageKey','subject','testVariables'],'string']
+            [['messageKey','subject','testVariables'],'string'],
+            [['testOrderId'], 'array']
         ]);
     }
 
@@ -47,6 +48,20 @@ class EmailSettings extends Model
         }
 
         return $order;
+    }
+
+    public function getTestOrderHistory(): ?\craft\commerce\models\OrderHistory
+    {
+        $orderHistory = null;
+
+        if (!empty($this->testOrderId)) {
+            $histories = \craft\commerce\Plugin::getInstance()->getOrderHistories()->getAllOrderHistoriesByOrderId($this->testOrderId[0]);
+            if (!empty($histories)) {
+                $orderHistory = $histories[0];
+            }
+        }
+
+        return $orderHistory;
     }
 
     public function getSystemMessage(): ?SystemMessage
