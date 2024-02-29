@@ -2,7 +2,7 @@
 
 namespace webdna\craftemailcontenteditor\fields;
 
-use webdna\craftemailcontenteditor\EmailEntries;
+use webdna\craftemailcontenteditor\EmailContentEditor;
 use webdna\craftemailcontenteditor\models\EmailSettings as ModelsEmailSettings;
 
 use Craft;
