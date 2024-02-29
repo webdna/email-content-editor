@@ -10,29 +10,29 @@
 </div>
 
 {{ forms.editableTable({
-    'instructions': 'Set Custom Emails.'|t('email-entries'),
+    'instructions': 'Set Custom Emails.'|t('email-content-editor'),
     'id': 'customSystemMessages',
     'name': 'customSystemMessages',
     'staticRows':false,
     'allowAdd': true,
     'allowDelete': true,
     'allowReorder': true,
-    'addRowLabel': 'Add Custom Email'|t('email-entries'),
+    'addRowLabel': 'Add Custom Email'|t('email-content-editor'),
     'cols': {
         'key': {
-            'heading': 'Key'|t('email-entries'),
+            'heading': 'Key'|t('email-content-editor'),
             'type': 'singleline'
         },
         'heading': {
-            'heading': 'Default Heading'|t('email-entries'),
+            'heading': 'Default Heading'|t('email-content-editor'),
             'type': 'singleline'
         },
         'subject': {
-            'heading': 'Default Subject'|t('email-entries'),
+            'heading': 'Default Subject'|t('email-content-editor'),
             'type': 'singleline',
         },
         'body': {
-            'heading': 'Default Body'|t('email-entries'),
+            'heading': 'Default Body'|t('email-content-editor'),
             'type': 'multiline',
         }
     }, 

@@ -28,7 +28,7 @@ class EmailSettings extends Field
 
     public static function displayName(): string
     {
-        return Craft::t('email-entries', 'Email Settings');
+        return Craft::t('email-content-editor', 'Email Settings');
     }
 
     public static function valueType(): string
@@ -95,7 +95,7 @@ class EmailSettings extends Field
 
         // Render the input template
         return $view->renderTemplate(
-            'email-entries/settings-field',
+            'email-content-editor/settings-field',
             [
                 'name' => $this->handle,
                 'model' => $value,

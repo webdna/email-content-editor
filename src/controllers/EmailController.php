@@ -18,7 +18,7 @@ class EmailController extends Controller
     protected array|int|bool $allowAnonymous = self::ALLOW_ANONYMOUS_NEVER;
 
     /**
-     * email-entries/email action
+     * email-content-editor/email action
      */
     public function actionSendEmail(): ?Response
     {

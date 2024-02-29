@@ -1,9 +1,9 @@
 <?php
 
-namespace webdna\craftemailentries\services;
+namespace webdna\craftemailcontenteditor\services;
 
-use webdna\craftemailentries\fields\EmailSettings as FieldsEmailSettings;
-use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
+use webdna\craftemailcontenteditor\fields\EmailSettings as FieldsEmailSettings;
+use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
 
 
 use Craft;
@@ -181,7 +181,7 @@ class Emails extends Component
         try {
             $message->setSubject($subject);
         } catch (\Exception $e) {
-            $error = Craft::t('email-entries', `Email template parse error for system message "{email}" in "Subject:". To: "{to}". Template error: "{message}"`, [
+            $error = Craft::t('email-content-editor', `Email template parse error for system message "{email}" in "Subject:". To: "{to}". Template error: "{message}"`, [
                 'email' => $message->key,
                 'to' => $message->getTo(),
                 'message' => $e->getMessage()
@@ -212,7 +212,7 @@ class Emails extends Component
                 $htmlBody = $view->renderString($htmlBody,$variables,$view::TEMPLATE_MODE_SITE);
 
             } catch (\Exception $e) {
-                $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
+                $error = Craft::t('email-content-editor', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
                     'email' => $message->key,
                     'message' => $e->getMessage()
                 ]);
@@ -220,7 +220,7 @@ class Emails extends Component
             }
             $message->setHtmlBody($htmlBody);
         } catch (\Exception $e) {
-            $error = Craft::t('email-entries', 'Email template parse error for email {email}. Failed to set bodyHtml. Template error: {message}', [
+            $error = Craft::t('email-content-editor', 'Email template parse error for email {email}. Failed to set bodyHtml. Template error: {message}', [
                 'email' => $message->key,
                 'message' => $e->getMessage()
             ]);

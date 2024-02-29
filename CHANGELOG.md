@@ -1,5 +1,8 @@
 # Release Notes for Email Content Editor
 
+## 1.0.14 29/02/24
+- More naming fixes
+
 ## 1.0.13 29/02/24
 - Updated plugin name, namespaces etc.
 - Updated license

@@ -119,7 +119,7 @@ class EmailContentEditor extends Plugin
                 // ...add the send test email
                 $entry = $event->sender;
                 if ($event->static !== true 
-                    && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($entry)
+                    && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($entry)
                     && Craft::$app->user->checkPermission('testEmails')
                 ) {
                     $event->html .= Craft::$app->getView()->renderTemplate('email-content-editor/button', [
