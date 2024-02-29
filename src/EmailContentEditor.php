@@ -1,11 +1,11 @@
 <?php
 
-namespace webdna\craftemailentries;
+namespace webdna\craftemailcontenteditor;
 
-use webdna\craftemailentries\fields\EmailSettings;
-use webdna\craftemailentries\models\EmailSettings as EmailSettingsModel;
-use webdna\craftemailentries\models\Settings;
-use webdna\craftemailentries\services\Emails;
+use webdna\craftemailcontenteditor\fields\EmailSettings;
+use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
+use webdna\craftemailcontenteditor\models\Settings;
+use webdna\craftemailcontenteditor\services\Emails;
 
 use craft\commerce\events\MailEvent;
 use craft\commerce\services\Emails as CommerceEmails;
@@ -35,7 +35,7 @@ use yii\base\Event;
  * @license MIT
  * @property-read Emails $emails
  */
-class EmailEntries extends Plugin
+class EmailContentEditor extends Plugin
 {
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSettings = true;
@@ -72,11 +72,11 @@ class EmailEntries extends Plugin
 
     protected function settingsHtml(): ?string
     {
-        if (!Craft::$app->user->checkPermission('manageEmailEntriesSettings')) {
+        if (!Craft::$app->user->checkPermission('manageEmailContentEditorSettings')) {
             return '';
         }
         return \Craft::$app->getView()->renderTemplate(
-            'email-entries/settings',
+            'email-content-editor/settings',
             [ 
                 'settings' => $this->getSettings(),
             ]
@@ -90,12 +90,12 @@ class EmailEntries extends Plugin
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
             function(RegisterUserPermissionsEvent $event) {
                 $event->permissions[] = [
-                    'heading' => "Email Entries",
+                    'heading' => "Email Content Editor",
                     'permissions' => [
                         'setTestVariables' => [
                             'label' => 'Set Test Variables',
                         ],
-                        'manageEmailEntriesSettings' => [
+                        'manageEmailContentEditorSettings' => [
                             'label' => 'Manage Plugin Settings'
                         ],
                         'testEmails' => [
@@ -122,7 +122,7 @@ class EmailEntries extends Plugin
                     && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($entry)
                     && Craft::$app->user->checkPermission('testEmails')
                 ) {
-                    $event->html .= Craft::$app->getView()->renderTemplate('email-entries/button', [
+                    $event->html .= Craft::$app->getView()->renderTemplate('email-content-editor/button', [
                         'entry'=>$entry,
                     ], View::TEMPLATE_MODE_CP);
                 }
@@ -137,11 +137,11 @@ class EmailEntries extends Plugin
                 if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
                     if (
                         array_key_exists('entry',$e->variables) 
-                        && $settingsFieldHandle = EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                        && $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                     ) {
                         $entry = $e->variables['entry'];
                         $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
-                        $variables = EmailEntries::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
+                        $variables = EmailContentEditor::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
                         $e->variables = $variables;
                     }
                 }
@@ -154,9 +154,9 @@ class EmailEntries extends Plugin
             function (TemplateEvent $e) {
                 if (
                     array_key_exists('entry',$e->variables) 
-                    && EmailEntries::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                    && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                 ) {
-                    $e->output = EmailEntries::getInstance()->emails->reRenderTemplateForTwig($e->output, $e->variables);
+                    $e->output = EmailContentEditor::getInstance()->emails->reRenderTemplateForTwig($e->output, $e->variables);
                 }
             }
         );
@@ -168,7 +168,7 @@ class EmailEntries extends Plugin
                 if ($event->message->key != null) {
 
                     // is there an entry set up to modify this system message?
-                    $entry = EmailEntries::getInstance()->emails->findEntryForEmail($event->message->key);
+                    $entry = EmailContentEditor::getInstance()->emails->findEntryForEmail($event->message->key);
                     if ($entry) {  
                         $toEmailArr = array_keys($event->message->getTo());
                         $toEmail = array_pop($toEmailArr);
@@ -186,7 +186,7 @@ class EmailEntries extends Plugin
                         $variables['recipient'] = $user;
                         $variables['entry'] = $entry;
                         
-                        $event->message = EmailEntries::getInstance()->emails->buildEmail($entry,$event->message,$variables);
+                        $event->message = EmailContentEditor::getInstance()->emails->buildEmail($entry,$event->message,$variables);
                     }    
                 }
             }
@@ -212,7 +212,7 @@ class EmailEntries extends Plugin
                 CommerceEmails::EVENT_BEFORE_SEND_MAIL,
                 function(MailEvent $e) {
                     //Get the Email Entry Associated with the Commerce Email Event
-                    $emailEntry = EmailEntries::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
+                    $emailEntry = EmailContentEditor::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
                     if ($emailEntry) {  
                         $toEmailArr = array_keys($e->craftEmail->getTo());
                         $toEmail = array_pop($toEmailArr);
@@ -230,7 +230,7 @@ class EmailEntries extends Plugin
                             $variables['entry'] = $emailEntry;
                             $variables['order'] = $e->order;
                             $variables['orderHistory'] = $e->orderHistory;
-                            $e->craftEmail = EmailEntries::getInstance()->emails->buildEmail($emailEntry,$e->craftEmail,$variables);
+                            $e->craftEmail = EmailContentEditor::getInstance()->emails->buildEmail($emailEntry,$e->craftEmail,$variables);
                         }
                     }
                 }

@@ -1,4 +1,11 @@
-# Release Notes for Email Entries
+# Release Notes for Email Content Editor
+
+## 1.0.13 29/02/24
+- Updated plugin name, namespaces etc.
+- Updated license
+
+## 1.0.12 28/02/24
+- Fixed a bug where getting the orderHistory would cause test commerce emails to send twice
 
 ## 1.0.11 27/02/24
 - Fix bug with plugin settings

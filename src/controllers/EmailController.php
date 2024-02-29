@@ -1,12 +1,12 @@
 <?php
 
-namespace webdna\craftemailentries\controllers;
+namespace webdna\craftemailcontenteditor\controllers;
 
-use webdna\craftemailentries\EmailEntries;
+use webdna\craftemailcontenteditor\EmailEntries;
 
 use Craft;
 use craft\web\Controller;
-
+use webdna\craftemailcontenteditor\EmailContentEditor;
 use yii\web\Response;
 
 /**
@@ -41,7 +41,7 @@ class EmailController extends Controller
                 "User does not have sufficient priviledges to send test email."
             );
         } else {
-            $sent = EmailEntries::getInstance()->emails->sendTestEmail($id);
+            $sent = EmailContentEditor::getInstance()->emails->sendTestEmail($id);
             if ($sent) {
                 Craft::$app->getSession()->setNotice("Email sent successfully");
                 return $this->asSuccess(

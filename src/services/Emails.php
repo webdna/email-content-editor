@@ -173,7 +173,7 @@ class Emails extends Component
     // Private Methods
     // =========================================================================
 
-    private function _createSubjectLine($subject,$variables,$message): void
+    private function _createSubjectLine(string $subject, array $variables, Message $message): void
     {
         $view = Craft::$app->getView();
         $subject = $view->renderString($subject, $variables, $view::TEMPLATE_MODE_SITE);
@@ -192,7 +192,7 @@ class Emails extends Component
         return;
     }
 
-    private function _createBody($entry,$variables,$message): void
+    private function _createBody(Entry $entry, array $variables, Message $message): void
     {
         $view = Craft::$app->getView();
         $siteSettings = Craft::$app->getSections()->getSectionSiteSettings($entry->sectionId);

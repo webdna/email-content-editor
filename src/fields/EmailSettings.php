@@ -1,9 +1,9 @@
 <?php
 
-namespace webdna\craftemailentries\fields;
+namespace webdna\craftemailcontenteditor\fields;
 
-use webdna\craftemailentries\EmailEntries;
-use webdna\craftemailentries\models\EmailSettings as ModelsEmailSettings;
+use webdna\craftemailcontenteditor\EmailEntries;
+use webdna\craftemailcontenteditor\models\EmailSettings as ModelsEmailSettings;
 
 use Craft;
 use craft\base\ElementInterface;
@@ -72,7 +72,7 @@ class EmailSettings extends Field
     protected function inputHtml(mixed $value, ElementInterface $element = null): string
     {
         $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map( function ($m) { $m['heading'] = str_replace(':','',$m['heading']); return $m;})->pluck('heading', 'key')->all();
-        $commerceEmails = EmailEntries::getInstance()->emails->getAllCommerceEmails();
+        $commerceEmails = EmailContentEditor::getInstance()->emails->getAllCommerceEmails();
         $messageOptions = array_merge($systemMessages,$commerceEmails);
         $view = Craft::$app->getView();
         // Register our asset bundle
@@ -103,9 +103,6 @@ class EmailSettings extends Field
                 'messageKey' => $values->messageKey,
                 'testVariables' => $values->testVariables,
                 'testOrder' => $values->getTestOrder(),
-                //'type' => $value['type'],
-                //'value' => $value['value'],
-                //   d'element' => $element,
                 'options' => $messageOptions,
                 'element' => $element,
                 'field' => $this,
