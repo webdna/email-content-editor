@@ -140,9 +140,11 @@ class EmailContentEditor extends Plugin
                         && $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                     ) {
                         $entry = $e->variables['entry'];
-                        $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
-                        $variables = EmailContentEditor::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
-                        $e->variables = $variables;
+                        if ($entry->getFieldValue($settingsFieldHandle)) {
+                            $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
+                            $variables = EmailContentEditor::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
+                            $e->variables = $variables;
+                        }
                     }
                 }
             }

@@ -31,7 +31,12 @@ class Emails extends Component
 
         foreach ($entries as $entry) {
             $emailSettingsHandle = $this->getEmailSettingsFieldHandle($entry);
-            if ($entry->getFieldValue($emailSettingsHandle)['messageKey'] == $messageKey) {
+            $emailSettingsField = $entry->getFieldValue($emailSettingsHandle);
+            if (
+                !empty($emailSettingsField)
+                && is_array($emailSettingsField)
+                && array_key_exists('messageKey', $emailSettingsField)
+                && $emailSettingsField['messageKey'] == $messageKey) {
                 return $entry;
             }
         }

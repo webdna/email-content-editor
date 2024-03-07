@@ -1,5 +1,8 @@
 # Release Notes for Email Content Editor
 
+## 1.0.15 07/03/24
+- Improve situations where the entry-email pair is triggered but the field the is empty.
+
 ## 1.0.14 29/02/24
 - More naming fixes
 
