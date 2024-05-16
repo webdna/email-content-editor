@@ -69,7 +69,7 @@ class EmailSettings extends Field
         return $value;
     }
 
-    protected function inputHtml(mixed $value, ElementInterface $element = null): string
+    protected function inputHtml(mixed $value, ?ElementInterface $element, bool $inline): string
     {
         $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map( function ($m) { $m['heading'] = str_replace(':','',$m['heading']); return $m;})->pluck('heading', 'key')->all();
         $commerceEmails = EmailContentEditor::getInstance()->emails->getAllCommerceEmails();

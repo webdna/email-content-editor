@@ -34,7 +34,7 @@
                 id: 'test-order-id',
                 name: "#{name}[testOrderId]",
                 elementType: className(create('craft\\commerce\\elements\\Order')),
-                elements: [testOrder],
+                elements: testOrder ? [testOrder] : null,
                 limit: 1
             } only %}
         </div>

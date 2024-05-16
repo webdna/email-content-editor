@@ -22,11 +22,15 @@ class Emails extends Component
 {
     public function findEntryForEmail($messageKey): ?Entry
     {
-        $fields = $this->getAllEmailSettingsFieldsColumnNames();
+        $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
+
         $entries = Entry::find();
-        foreach ($fields as $key => $value) {
-            $entries->andWhere(Db::parseParam('content.'.$value['columnName'], ':notempty:'));
+        
+        $fields = collect($emailSettingsFields)->map(function($f){ return $f->handle; });
+        foreach ($fields as $field) {
+            $entries->$field(":notempty:");
         }
+        
         $entries->all();
 
         foreach ($entries as $entry) {
@@ -51,9 +55,9 @@ class Emails extends Component
         $fields = [];
         foreach ($emailSettingsFields as $field) {
             $columnName = '';
-            if ($field->columnPrefix) {
+            /*if ($field->columnPrefix) {
                 $columnName .= $field->columnPrefix . '_';
-            }
+            }*/
             $columnName .= 'field_' . $field->handle;
             if ($field->columnSuffix) {
                 $columnName .= '_' . $field->columnSuffix;
@@ -200,7 +204,7 @@ class Emails extends Component
     private function _createBody(Entry $entry, array $variables, Message $message): void
     {
         $view = Craft::$app->getView();
-        $siteSettings = Craft::$app->getSections()->getSectionSiteSettings($entry->sectionId);
+        $siteSettings = Craft::$app->getEntries()->getSectionSiteSettings($entry->sectionId);
         foreach ($siteSettings as $setting) {
             if ($setting['siteId'] == $entry->siteId ) {
                 $template = $setting['template'];
