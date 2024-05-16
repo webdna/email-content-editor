@@ -2,7 +2,6 @@
     "name": "webdna/craft-email-content-editor",
     "description": "A Craft CMS plugin to turn entries into emails",
     "type": "craft-plugin",
-    "version": "1.0.15",
     "support": {
         "issues": "https://github.com/webdna/email-content-editor/issues?state=open",
         "source": "https://github.com/webdna/email-content-editor",
@@ -10,8 +9,8 @@
         "rss": "https://github.com/webdna/email-content-editor/releases.atom"
     },
     "require": {
-        "php": ">=8.0.2",
-        "craftcms/cms": "^4.4.0||^5.0"
+        "php": ">=8.1",
+        "craftcms/cms": "^5.0"
     },
     "require-dev": {
         "craftcms/ecs": "dev-main",
