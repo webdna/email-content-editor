@@ -1,3 +1,5 @@
+{% import "codeeditor/codeEditor" as codeEditor %}
+
 <div id="subject-field" class="field" data-attribute="subject" style="margin-top: 1rem !important;">
     <div class="heading">
         <label id="subject-label" for="subject">Email Subject</label>
@@ -40,20 +42,13 @@
         </div>
     </div>
 {% endif %}
+
 {% if craft.app.user.checkPermission('setTestVariables') %}
-    <div id="test-json-field" class="field" data-attribute="test-json">
-        <div class="heading">
-            <label id="test-json-label" for="test-json">Additional Test Variables (JSON)</label>
-        </div>
-        <div class="input ltr">
-            {% include "_includes/forms/textarea" with {
-                name: "#{name}[testVariables]",
-                id: 'testVariables',
-                style: 'font-family:mono',
-                class:'nicetext code text',
-                value: testVariables              
-            } only %}
-            
-        </div>
-    </div>
+    {{ codeEditor.textareaField({
+        label: "Additional Test Variables (JSON)"|t,
+        instructions: "Enter any text variables below, twig can be used"|t,
+        id: 'testVariables',
+        name: "#{name}[testVariables]",
+            value: testVariables              
+    }, "CodeEditor", { "language": "twig"},) }}
 {% endif %}
