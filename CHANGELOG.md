@@ -1,5 +1,10 @@
 # Release Notes for Email Content Editor
 
+## 2.0.1 11/06/24
+- Only render the passed in variables when rendering the user content, exclude Craft's global context and Craft variable.
+- Add code editor field for the test variables input.
+- Remove the ability to render test variables.
+
 ## 1.0.15 07/03/24
 - Improve situations where the entry-email pair is triggered but the field the is empty.
 

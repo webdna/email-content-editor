@@ -158,7 +158,7 @@ class EmailContentEditor extends Plugin
                     array_key_exists('entry',$e->variables) 
                     && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
                 ) {
-                    $e->output = EmailContentEditor::getInstance()->emails->reRenderTemplateForTwig($e->output, $e->variables);
+                    $e->output = EmailContentEditor::getInstance()->emails->sandboxRender($e->output, $e->variables);
                 }
             }
         );

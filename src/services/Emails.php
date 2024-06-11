@@ -13,6 +13,8 @@ use craft\helpers\Db;
 use craft\helpers\Json;
 use craft\mail\Message;
 use craft\models\SystemMessage;
+use craft\web\twig\TemplateLoader;
+use Twig\Environment;
 use yii\base\Component;
 
 /**
@@ -128,10 +130,9 @@ class Emails extends Component
         }
 
         if ($testVariables) {
-            $rendered = Craft::$app->getView()->renderString($testVariables, $context, Craft::$app->getView()::TEMPLATE_MODE_SITE);
-            $testVariables = Json::decodeIfJson($rendered);
-            if ($testVariables) {
-                foreach ($testVariables as $key => $value) {
+            $testJson = Json::decodeIfJson($testVariables);
+            if ($testJson && is_array($testJson)) {
+                foreach ($testJson as $key => $value) {
                     $context[$key] = $value;
                 }
             }
@@ -140,9 +141,17 @@ class Emails extends Component
         return $context;
     }
 
-    public function reRenderTemplateForTwig(string $output, array $variables): string
-    {
-        return Craft::$app->getView()->renderString($output, $variables, Craft::$app->getView()::TEMPLATE_MODE_SITE);
+    public function sandboxRender(string $output, array $variables): string {
+        // make sure we have no global variables or access to craft.app
+        $loader = new TemplateLoader(Craft::$app->getView());
+        $twig = new \Twig\Environment($loader, [
+            // See: https://github.com/twigphp/Twig/issues/1951
+            'cache' => Craft::$app->getPath()->getCompiledTemplatesPath(),
+            'auto_reload' => true,
+            'charset' => Craft::$app->charset,
+        ]);
+        
+        return $twig->createTemplate($output)->render($variables);
     }
     
     public function sendTestEmail(int $id): bool
@@ -184,8 +193,7 @@ class Emails extends Component
 
     private function _createSubjectLine(string $subject, array $variables, Message $message): void
     {
-        $view = Craft::$app->getView();
-        $subject = $view->renderString($subject, $variables, $view::TEMPLATE_MODE_SITE);
+        $subject = $this->sandboxRender($subject, $variables);
 
         try {
             $message->setSubject($subject);
@@ -218,7 +226,7 @@ class Emails extends Component
             $htmlBody = $view->renderTemplate($template, $variables, $view::TEMPLATE_MODE_SITE);
             // Lets double render incase the user has any {variable} stuff in there.
             try {
-                $htmlBody = $view->renderString($htmlBody,$variables,$view::TEMPLATE_MODE_SITE);
+                $htmlBody = $this->sandboxRender($htmlBody,$variables);
 
             } catch (\Exception $e) {
                 $error = Craft::t('email-content-editor', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
