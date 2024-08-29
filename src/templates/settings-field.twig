@@ -26,6 +26,20 @@
         } only %}
     </div>
 </div>
+<div id="test-user-field" class="field" data-attribute="test-user">
+    <div class="heading">
+        <label id="test-user-label" for="test-user">Test User</label>
+    </div>
+    <div class="input ltr">
+        {% include "_includes/forms/elementSelect" with {
+            id: 'test-user-id',
+            name: "#{name}[testUserId]",
+            elementType: className(create('craft\\elements\\User')),
+            elements: testUser ? [testUser] : null,
+            limit: 1
+        } only %}
+    </div>
+</div>
 {% if craft.app.getPlugins().isPluginEnabled('commerce') %}
     <div id="test-order-field" class="field" data-attribute="test-order">
         <div class="heading">

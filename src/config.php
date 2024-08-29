@@ -22,5 +22,7 @@ return [
     //         'subject' => 'custom system message',
     //         'body' => 'You can still edit this in utilities'
     //     ]
-    // ]
+    // ],
+    // define which custom fields from a user should be added to the recipient model
+    // 'recipientFields' => []
 ];

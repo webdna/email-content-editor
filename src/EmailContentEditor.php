@@ -4,6 +4,7 @@ namespace webdna\craftemailcontenteditor;
 
 use webdna\craftemailcontenteditor\fields\EmailSettings;
 use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
+use webdna\craftemailcontenteditor\models\Recipient;
 use webdna\craftemailcontenteditor\models\Settings;
 use webdna\craftemailcontenteditor\services\Emails;
 
@@ -179,13 +180,14 @@ class EmailContentEditor extends Plugin
                             $user = [
                                 'email' => $toEmail,
                                 'firstName' => explode('@',$toEmail)[0],
+                                'lastName' => '',
                                 'friendlyName' => explode('@',$toEmail)[0]
                             ];
                         }
                         
                         $variables = $event->message->variables;
                         $variables['variables'] = $event->message->variables;
-                        $variables['recipient'] = $user;
+                        $variables['recipient'] = new Recipient($user);
                         $variables['entry'] = $entry;
                         
                         $event->message = EmailContentEditor::getInstance()->emails->buildEmail($entry,$event->message,$variables);
@@ -223,12 +225,13 @@ class EmailContentEditor extends Plugin
                             $user = [
                                 'email' => $toEmail,
                                 'firstName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0],
+                                'lastName' => $e->order->billingAddress->lastName ?? '',
                                 'friendlyName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0]
                             ];
                         }
                         
                         if($emailEntry) {
-                            $variables['recipient'] = $user;
+                            $variables['recipient'] = new Recipient($user);
                             $variables['entry'] = $emailEntry;
                             $variables['order'] = $e->order;
                             $variables['orderHistory'] = $e->orderHistory;

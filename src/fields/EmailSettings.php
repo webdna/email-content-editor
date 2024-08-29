@@ -103,6 +103,7 @@ class EmailSettings extends Field
                 'messageKey' => $values->messageKey,
                 'testVariables' => $values->testVariables,
                 'testOrder' => $values->getTestOrder(),
+                'testUser' => $values->getTestUser(),
                 'options' => $messageOptions,
                 'element' => $element,
                 'field' => $this,

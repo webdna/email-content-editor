@@ -10,6 +10,7 @@ use craft\base\Model;
 class Settings extends Model
 {
     public array $customSystemMessages = [];
+    public array $recipientFields = [];
     protected function defineRules(): array
     {
         return array_merge(parent::defineRules(), [
