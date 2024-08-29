@@ -131,4 +131,13 @@ class EmailSettings extends Field
     {
         parent::modifyElementsQuery($query, $value);
     }
+
+    /**
+     * @inheritdoc
+     */
+    public static function icon(): string
+    {
+        return Craft::getAlias('@webdna/craftemailcontenteditor/icon-mask.svg');
+    }
+    
 }
