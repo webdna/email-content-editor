@@ -1,5 +1,9 @@
 # Release Notes for Email Content Editor
 
+## 1.0.17 29/08/24
+- Pass a recipient model to the template instead of the whole User element.
+- Previous use of custom fields on the recipient must now be through ``` {{ recipient.customFields.customFieldHandle }} ```. The field handle must be added to the config file for it to be available on the recipient.
+
 ## 1.0.16 11/06/24
 - Only render the passed in variables when rendering the user content, exclude Craft's global context and Craft variable.
 - Add code editor field for the test variables input.

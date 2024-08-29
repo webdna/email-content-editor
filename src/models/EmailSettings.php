@@ -16,7 +16,7 @@ class EmailSettings extends Model
     public string $messageKey = '';
     public string $subject = '';
     public string $testVariables = '';
-    public ?int $testUserId = null;
+    public array $testUserId = [];
     public array $testOrderId = [];
 
     protected function defineRules(): array
@@ -29,15 +29,11 @@ class EmailSettings extends Model
 
     public function getTestUser(): ?User
     {
-
-        $user = null;
         if ($this->testUserId) {
-            $user = User::find()->id($this->testUserId)->one();
+            return User::find()->id($this->testUserId)->one();
         }
 
-        if (!$user) {
-            return Craft::$app->getUser()->getIdentity();
-        }
+        return Craft::$app->getUser()->getIdentity();
     }
 
     public function getTestOrder(): ?\craft\commerce\elements\Order

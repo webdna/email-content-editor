@@ -4,7 +4,7 @@ namespace webdna\craftemailcontenteditor\services;
 
 use webdna\craftemailcontenteditor\fields\EmailSettings as FieldsEmailSettings;
 use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
-
+use webdna\craftemailcontenteditor\models\Recipient;
 
 use Craft;
 use craft\elements\Entry;
@@ -111,7 +111,7 @@ class Emails extends Component
     {
         $testVariables = $emailSettings->testVariables;
 
-        $context['recipient'] = $emailSettings->getTestUser();
+        $context['recipient'] = new Recipient($emailSettings->getTestUser());
 
         if (
             Craft::$app->getPlugins()->isPluginEnabled('commerce') 
@@ -122,7 +122,7 @@ class Emails extends Component
             $orderHistory = $emailSettings->getTestOrderHistory();
             $context['order'] = $order;
             $context['orderHistory'] = $orderHistory; 
-            $context['recipient'] = $order->customer;
+            $context['recipient'] = new Recipient($order->customer);
         }
 
         if ($testVariables) {
