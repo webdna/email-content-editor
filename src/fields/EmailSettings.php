@@ -2,15 +2,15 @@
 
 namespace webdna\craftemailcontenteditor\fields;
 
-use webdna\craftemailcontenteditor\EmailContentEditor;
-use webdna\craftemailcontenteditor\models\EmailSettings as ModelsEmailSettings;
-
 use Craft;
 use craft\base\ElementInterface;
+
 use craft\base\Field;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
+use webdna\craftemailcontenteditor\EmailContentEditor;
+use webdna\craftemailcontenteditor\models\EmailSettings as ModelsEmailSettings;
 
 use yii\db\Schema;
 
@@ -19,7 +19,6 @@ use yii\db\Schema;
  */
 class EmailSettings extends Field
 {
-
     public string $messageKey = '';
     public string $subject = '';
     public string $testVariables = '';
@@ -71,7 +70,10 @@ class EmailSettings extends Field
 
     protected function inputHtml(mixed $value, ?ElementInterface $element, bool $inline): string
     {
-        $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map( function ($m) { $m['heading'] = str_replace(':','',$m['heading']); return $m;})->pluck('heading', 'key')->all();
+        $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map(function($m) {
+            $m['heading'] = str_replace(':','',$m['heading']);
+            return $m;
+        })->pluck('heading', 'key')->all();
         $commerceEmails = EmailContentEditor::getInstance()->emails->getAllCommerceEmails();
         $messageOptions = array_merge($systemMessages,$commerceEmails);
         $view = Craft::$app->getView();
@@ -140,5 +142,4 @@ class EmailSettings extends Field
     {
         return Craft::getAlias('@webdna/craftemailcontenteditor/icon-mask.svg');
     }
-    
 }

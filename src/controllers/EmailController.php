@@ -2,8 +2,6 @@
 
 namespace webdna\craftemailcontenteditor\controllers;
 
-use webdna\craftemailcontenteditor\EmailEntries;
-
 use Craft;
 use craft\web\Controller;
 use webdna\craftemailcontenteditor\EmailContentEditor;
@@ -32,7 +30,6 @@ class EmailController extends Controller
                 "No entry id in request"
             );
         }
-
         if (!$siteId) {
             $siteId = Craft::$app->getSites()->getCurrentSite()->id;
         }
@@ -41,7 +38,7 @@ class EmailController extends Controller
                 "User does not have sufficient priviledges to send test email."
             );
         } else {
-            $sent = EmailContentEditor::getInstance()->emails->sendTestEmail($id);
+            $sent = EmailContentEditor::getInstance()->emails->sendTestEmail($id, $siteId);
             if ($sent) {
                 Craft::$app->getSession()->setNotice("Email sent successfully");
                 return $this->asSuccess(

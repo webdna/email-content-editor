@@ -1,5 +1,8 @@
 # Release Notes for Email Content Editor
 
+## 2.1.1 unreleased
+- Improve multisite performance, explicitly set the current site for template rendering.
+
 ## 2.1.0 29/08/24
 - Pass a recipient model to the template instead of the whole User element.
 - Previous use of custom fields on the recipient must now be through ``` {{ recipient.customFields.customFieldHandle }} ```. The field handle must be added to the config file for it to be available on the recipient.

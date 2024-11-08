@@ -2,7 +2,6 @@
 
 namespace webdna\craftemailcontenteditor\models;
 
-use Craft;
 use craft\base\Model;
 use craft\elements\User;
 use webdna\craftemailcontenteditor\EmailContentEditor;
@@ -22,7 +21,7 @@ class Recipient extends Model
     protected function defineRules(): array
     {
         return array_merge(parent::defineRules(), [
-            [['email','firstName','lastName', 'friendlyName'],'string'],
+            [['email', 'firstName', 'lastName', 'friendlyName'], 'string'],
         ]);
     }
 
@@ -47,7 +46,8 @@ class Recipient extends Model
         }
     }
 
-    public function setUser(User $user) {
+    public function setUser(User $user)
+    {
         if ($user) {
             $this->_user = $user;
         }
@@ -60,12 +60,9 @@ class Recipient extends Model
             if (!empty($allowedCustomFields)) {
                 $customFields = $this->_user->getFieldValues($allowedCustomFields);
                 foreach ($customFields as $key => $value) {
-                   $this->customFields[$key] = $value;
+                    $this->customFields[$key] = $value;
                 }
             }
         }
     }
-
-
-
 }

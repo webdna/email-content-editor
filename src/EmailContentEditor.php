@@ -2,20 +2,15 @@
 
 namespace webdna\craftemailcontenteditor;
 
-use webdna\craftemailcontenteditor\fields\EmailSettings;
-use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
-use webdna\craftemailcontenteditor\models\Recipient;
-use webdna\craftemailcontenteditor\models\Settings;
-use webdna\craftemailcontenteditor\services\Emails;
-
-use craft\commerce\events\MailEvent;
-use craft\commerce\services\Emails as CommerceEmails;
-
 use Craft;
 use craft\base\Model;
 use craft\base\Plugin;
+use craft\commerce\events\MailEvent;
+use craft\commerce\services\Emails as CommerceEmails;
+
 use craft\elements\Entry;
 use craft\events\DefineHtmlEvent;
+
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterEmailMessagesEvent;
 use craft\events\RegisterUserPermissionsEvent;
@@ -25,6 +20,11 @@ use craft\services\Fields;
 use craft\services\SystemMessages;
 use craft\services\UserPermissions;
 use craft\web\View;
+use webdna\craftemailcontenteditor\fields\EmailSettings;
+use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
+use webdna\craftemailcontenteditor\models\Recipient;
+use webdna\craftemailcontenteditor\models\Settings;
+use webdna\craftemailcontenteditor\services\Emails;
 use yii\base\Event;
 
 /**
@@ -61,7 +61,7 @@ class EmailContentEditor extends Plugin
                 $this->_attachCommerceEventHandlers();
             }
         });
-        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function (RegisterComponentTypesEvent $event) {
+        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
             $event->types[] = EmailSettings::class;
         });
     }
@@ -78,7 +78,7 @@ class EmailContentEditor extends Plugin
         }
         return \Craft::$app->getView()->renderTemplate(
             'email-content-editor/settings',
-            [ 
+            [
                 'settings' => $this->getSettings(),
             ]
         );
@@ -97,12 +97,12 @@ class EmailContentEditor extends Plugin
                             'label' => 'Set Test Variables',
                         ],
                         'manageEmailContentEditorSettings' => [
-                            'label' => 'Manage Plugin Settings'
+                            'label' => 'Manage Plugin Settings',
                         ],
                         'testEmails' => [
-                            'label' => 'Send Test Emails'
-                        ]
-                    ]
+                            'label' => 'Send Test Emails',
+                        ],
+                    ],
                 ];
                 // $event->permissions['General']['accessCp']['nested']['accessPlugin-' . $this->id] = [
                 //     'label' => Craft::t('app', 'Access {plugin}', ['plugin' => $this->name])
@@ -116,18 +116,17 @@ class EmailContentEditor extends Plugin
         Event::on(
             Entry::class,
             Entry::EVENT_DEFINE_ADDITIONAL_BUTTONS,
-            function (DefineHtmlEvent $event) {
+            function(DefineHtmlEvent $event) {
                 // ...add the send test email
                 $entry = $event->sender;
-                if ($event->static !== true 
+                if ($event->static !== true
                     && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($entry)
                     && Craft::$app->user->checkPermission('testEmails')
                 ) {
                     $event->html .= Craft::$app->getView()->renderTemplate('email-content-editor/button', [
-                        'entry'=>$entry,
+                        'entry' => $entry,
                     ], View::TEMPLATE_MODE_CP);
                 }
-
             }
         );
 
@@ -137,8 +136,8 @@ class EmailContentEditor extends Plugin
             function(TemplateEvent $e) {
                 if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
                     if (
-                        array_key_exists('entry',$e->variables) 
-                        && $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                        array_key_exists('entry',$e->variables)
+                        && $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry'])
                     ) {
                         $entry = $e->variables['entry'];
                         if ($entry->getFieldValue($settingsFieldHandle)) {
@@ -154,10 +153,10 @@ class EmailContentEditor extends Plugin
         Event::on(
             View::class,
             View::EVENT_AFTER_RENDER_PAGE_TEMPLATE,
-            function (TemplateEvent $e) {
+            function(TemplateEvent $e) {
                 if (
-                    array_key_exists('entry',$e->variables) 
-                    && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry']) 
+                    array_key_exists('entry',$e->variables)
+                    && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry'])
                 ) {
                     $e->output = EmailContentEditor::getInstance()->emails->sandboxRender($e->output, $e->variables);
                 }
@@ -169,10 +168,10 @@ class EmailContentEditor extends Plugin
             Mailer::EVENT_BEFORE_SEND,
             function(Event $event) {
                 if ($event->message->key != null) {
-
                     // is there an entry set up to modify this system message?
-                    $entry = EmailContentEditor::getInstance()->emails->findEntryForEmail($event->message->key);
-                    if ($entry) {  
+                    $siteId = Craft::$app->getSites()->getCurrentSite()->id;
+                    $entry = EmailContentEditor::getInstance()->emails->findEntryForEmail($event->message->key, $siteId);
+                    if ($entry) {
                         $toEmailArr = array_keys($event->message->getTo());
                         $toEmail = array_pop($toEmailArr);
                         $user = Craft::$app->users->getUserByUsernameOrEmail($toEmail);
@@ -181,7 +180,7 @@ class EmailContentEditor extends Plugin
                                 'email' => $toEmail,
                                 'firstName' => explode('@',$toEmail)[0],
                                 'lastName' => '',
-                                'friendlyName' => explode('@',$toEmail)[0]
+                                'friendlyName' => explode('@',$toEmail)[0],
                             ];
                         }
                         
@@ -191,10 +190,10 @@ class EmailContentEditor extends Plugin
                         $variables['entry'] = $entry;
                         
                         $event->message = EmailContentEditor::getInstance()->emails->buildEmail($entry,$event->message,$variables);
-                    }    
+                    }
                 }
             }
-        ); 
+        );
         
         Event::on(
             SystemMessages::class,
@@ -211,13 +210,14 @@ class EmailContentEditor extends Plugin
 
     private function _attachCommerceEventHandlers()
     {
-            Event::on(
-                CommerceEmails::class, 
+        Event::on(
+                CommerceEmails::class,
                 CommerceEmails::EVENT_BEFORE_SEND_MAIL,
                 function(MailEvent $e) {
                     //Get the Email Entry Associated with the Commerce Email Event
-                    $emailEntry = EmailContentEditor::getInstance()->emails->findEntryForEmail('commerceEmail'.$e->commerceEmail->id);
-                    if ($emailEntry) {  
+                    $siteId = $e->order->siteId;
+                    $emailEntry = EmailContentEditor::getInstance()->emails->findEntryForEmail('commerceEmail' . $e->commerceEmail->id, $siteId);
+                    if ($emailEntry) {
                         $toEmailArr = array_keys($e->craftEmail->getTo());
                         $toEmail = array_pop($toEmailArr);
                         $user = Craft::$app->users->getUserByUsernameOrEmail($toEmail);
@@ -226,20 +226,24 @@ class EmailContentEditor extends Plugin
                                 'email' => $toEmail,
                                 'firstName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0],
                                 'lastName' => $e->order->billingAddress->lastName ?? '',
-                                'friendlyName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0]
+                                'friendlyName' => $e->order->billingAddress->firstName ?? explode('@',$toEmail)[0],
                             ];
                         }
                         
-                        if($emailEntry) {
+                        if ($emailEntry) {
                             $variables['recipient'] = new Recipient($user);
                             $variables['entry'] = $emailEntry;
                             $variables['order'] = $e->order;
                             $variables['orderHistory'] = $e->orderHistory;
+
+                            $siteService = Craft::$app->getSites();
+                            $originalSite = $siteService->getCurrentSite();
+                            $siteService->setCurrentSite($emailEntry->siteId);
                             $e->craftEmail = EmailContentEditor::getInstance()->emails->buildEmail($emailEntry,$e->craftEmail,$variables);
+                            $siteService->setCurrentSite($originalSite);
                         }
                     }
                 }
             );
-        
     }
 }

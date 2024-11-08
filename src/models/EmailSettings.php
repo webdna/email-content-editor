@@ -22,8 +22,8 @@ class EmailSettings extends Model
     protected function defineRules(): array
     {
         return array_merge(parent::defineRules(), [
-            [['messageKey','subject','testVariables'],'string'],
-            [['testOrderId'], 'array']
+            [['messageKey', 'subject', 'testVariables'], 'string'],
+            [['testOrderId'], 'array'],
         ]);
     }
 
@@ -68,19 +68,18 @@ class EmailSettings extends Model
         $systemMessage = null;
         if (
             str_contains($this->messageKey, 'commerceEmail')
-            && Craft::$app->plugins->isPluginEnabled('commerce')) 
-            {
+            && Craft::$app->plugins->isPluginEnabled('commerce')) {
             $commerceEmails = \craft\commerce\Plugin::getInstance()->getEmails()->getAllEmails();
             if ($commerceEmails) {
                 foreach ($commerceEmails as $commerceEmail) {
-                    if ($this->messageKey == 'commerceEmail'.$commerceEmail->id) {
+                    if ($this->messageKey == 'commerceEmail' . $commerceEmail->id) {
                         # code...
                         $systemMessage = $commerceEmail;
                     }
                 }
             }
         } else {
-            foreach(Craft::$app->getSystemMessages()->getAllMessages() as $message) {
+            foreach (Craft::$app->getSystemMessages()->getAllMessages() as $message) {
                 if ($message['key'] == $this->key) {
                     $systemMessage = $message['key'];
                 }
@@ -89,5 +88,4 @@ class EmailSettings extends Model
 
         return $systemMessage;
     }
-
 }

@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 
 /**
  * Email Content Editor config.php
