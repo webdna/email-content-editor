@@ -1,6 +1,6 @@
 # Release Notes for Email Content Editor
 
-## 2.1.1 unreleased
+## 2.1.1 08/11/24
 - Improve multisite performance, explicitly set the current site for template rendering.
 
 ## 2.1.0 29/08/24
