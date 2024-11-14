@@ -1,5 +1,8 @@
 # Release Notes for Email Content Editor
 
+## 2.1.2 14/11/24
+- order.orderSiteId fix
+
 ## 2.1.1 08/11/24
 - Improve multisite performance, explicitly set the current site for template rendering.
 

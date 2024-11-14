@@ -215,7 +215,7 @@ class EmailContentEditor extends Plugin
                 CommerceEmails::EVENT_BEFORE_SEND_MAIL,
                 function(MailEvent $e) {
                     //Get the Email Entry Associated with the Commerce Email Event
-                    $siteId = $e->order->siteId;
+                    $siteId = $e->order->orderSiteId;
                     $emailEntry = EmailContentEditor::getInstance()->emails->findEntryForEmail('commerceEmail' . $e->commerceEmail->id, $siteId);
                     if ($emailEntry) {
                         $toEmailArr = array_keys($e->craftEmail->getTo());
