@@ -77,18 +77,15 @@ class Emails extends Component
     }
 
     public function getEmailSettingsFieldHandle(Entry $entry): ?string
-    {
-        $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
-        $emailSettingsFieldsHandles = array_column($emailSettingsFields, 'handle');
-        
-        foreach ($emailSettingsFieldsHandles as $handle) {
-            if (array_key_exists($handle, $entry->getFieldValues())) {
-                return $handle;
-            }
-        }
-        
-        return null;
-    }
+	{
+	    foreach ($entry->getFieldLayout()?->getCustomFields() ?? [] as $field) {
+	        if ($field instanceof FieldsEmailSettings) {
+	            return $field->handle;
+	        }
+	    }
+	
+	    return null;
+	}
 
     public function getAllCommerceEmails(): array
     {
