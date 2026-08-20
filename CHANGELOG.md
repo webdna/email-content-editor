@@ -1,5 +1,8 @@
 # Release Notes for Email Content Editor
 
+## 2.1.3 20/08/26
+- Refactor getEmailSettingsFieldHandle method
+
 ## 2.1.2 14/11/24
 - order.orderSiteId fix
 
