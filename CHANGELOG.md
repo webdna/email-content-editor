@@ -1,5 +1,10 @@
 # Release Notes for Email Content Editor
 
+## Unreleased
+### Fixed
+- Removed a `modifyElementsQuery()` override that called a method Craft 5 no longer has.
+- Fixed an undefined variable when an entry's section has no settings for the entry's site.
+
 ## 2.1.3 20/08/26
 - Refactor getEmailSettingsFieldHandle method
 

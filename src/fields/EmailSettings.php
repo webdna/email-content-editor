@@ -6,7 +6,6 @@ use Craft;
 use craft\base\ElementInterface;
 
 use craft\base\Field;
-use craft\elements\db\ElementQueryInterface;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use webdna\craftemailcontenteditor\EmailContentEditor;
@@ -128,11 +127,6 @@ class EmailSettings extends Field
     public function getElementConditionRuleType(): array|string|null
     {
         return null;
-    }
-
-    public function modifyElementsQuery(ElementQueryInterface $query, mixed $value): void
-    {
-        parent::modifyElementsQuery($query, $value);
     }
 
     /**

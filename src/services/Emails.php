@@ -217,6 +217,7 @@ class Emails extends Component
     private function _createBody(Entry $entry, array $variables, Message $message): void
     {
         $view = Craft::$app->getView();
+        $template = null;
         $siteSettings = Craft::$app->getEntries()->getSectionSiteSettings($entry->sectionId);
         foreach ($siteSettings as $setting) {
             if ($setting['siteId'] == $entry->siteId) {

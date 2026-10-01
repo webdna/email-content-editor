@@ -30,7 +30,7 @@ use yii\base\Event;
 /**
  * Email Entries plugin
  *
- * @method static EmailEntries getInstance()
+ * @method static EmailContentEditor getInstance()
  * @author webdna
  * @copyright webdna
  * @license MIT
