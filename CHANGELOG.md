@@ -1,9 +1,12 @@
 # Release Notes for Email Content Editor
 
-## Unreleased
+## 2.1.4 - 2026-10-23
 ### Fixed
 - Removed a `modifyElementsQuery()` override that called a method Craft 5 no longer has.
 - Fixed an undefined variable when an entry's section has no settings for the entry's site.
+
+### Changed
+- New plugin icon: a white glyph on a black circle, with a white icon mask for the control panel nav.
 
 ## 2.1.3 20/08/26
 - Refactor getEmailSettingsFieldHandle method
