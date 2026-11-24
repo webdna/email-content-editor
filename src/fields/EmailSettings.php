@@ -67,6 +67,20 @@ class EmailSettings extends Field
         return $value;
     }
 
+    public function normalizeValueFromRequest(mixed $value, ?ElementInterface $element): mixed
+    {
+        // Only people with the "Set Test Variables" permission see the test variables input, but the value is
+        // posted with the rest of the field. For everyone else keep the saved test variables, so they can't be
+        // set by editing the request, and aren't wiped when the entry is saved.
+        $user = Craft::$app->getUser()->getIdentity();
+        if (is_array($value) && !$user?->can('setTestVariables')) {
+            $saved = $element?->getFieldValue($this->handle);
+            $value['testVariables'] = is_array($saved) ? ($saved['testVariables'] ?? '') : '';
+        }
+
+        return parent::normalizeValueFromRequest($value, $element);
+    }
+
     protected function inputHtml(mixed $value, ?ElementInterface $element, bool $inline): string
     {
         $systemMessages = collect(Craft::$app->getSystemMessages()->getAllMessages())->map(function($m) {

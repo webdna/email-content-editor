@@ -134,17 +134,13 @@ class EmailContentEditor extends Plugin
             View::class,
             View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE,
             function(TemplateEvent $e) {
-                if ($e->templateMode == View::TEMPLATE_MODE_SITE) {
-                    if (
-                        array_key_exists('entry',$e->variables)
-                        && $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry'])
-                    ) {
-                        $entry = $e->variables['entry'];
-                        if ($entry->getFieldValue($settingsFieldHandle)) {
-                            $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
-                            $variables = EmailContentEditor::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
-                            $e->variables = $variables;
-                        }
+                $entry = $this->_previewedEmailEntry($e);
+                if ($entry) {
+                    $settingsFieldHandle = EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($entry);
+                    if ($entry->getFieldValue($settingsFieldHandle)) {
+                        $emailSettings = new EmailSettingsModel($entry->getFieldValue($settingsFieldHandle));
+                        $variables = EmailContentEditor::getInstance()->emails->mergeTestVariables($emailSettings,$e->variables);
+                        $e->variables = $variables;
                     }
                 }
             }
@@ -154,10 +150,7 @@ class EmailContentEditor extends Plugin
             View::class,
             View::EVENT_AFTER_RENDER_PAGE_TEMPLATE,
             function(TemplateEvent $e) {
-                if (
-                    array_key_exists('entry',$e->variables)
-                    && EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($e->variables['entry'])
-                ) {
+                if ($this->_previewedEmailEntry($e)) {
                     $e->output = EmailContentEditor::getInstance()->emails->sandboxRender($e->output, $e->variables);
                 }
             }
@@ -206,6 +199,34 @@ class EmailContentEditor extends Plugin
                 }
             }
         );
+    }
+
+    /**
+     * Returns the email entry a site template is rendering, if this is a preview by someone allowed to edit it.
+     *
+     * Test data (test recipient, test order, test variables) and the rendering of the email's Twig are only
+     * applied to these previews, so visiting an email entry's URL never shows anyone else's details, and
+     * nobody without edit access can trigger the email's Twig.
+     */
+    private function _previewedEmailEntry(TemplateEvent $e): ?Entry
+    {
+        $entry = $e->variables['entry'] ?? null;
+        if (
+            $e->templateMode !== View::TEMPLATE_MODE_SITE
+            || !$entry instanceof Entry
+            || !EmailContentEditor::getInstance()->emails->getEmailSettingsFieldHandle($entry)
+        ) {
+            return null;
+        }
+
+        $request = Craft::$app->getRequest();
+        if ($request->getIsConsoleRequest() || !$request->getIsPreview()) {
+            return null;
+        }
+
+        $user = Craft::$app->getUser()->getIdentity();
+
+        return $user && Craft::$app->getElements()->canSave($entry, $user) ? $entry : null;
     }
 
     private function _attachCommerceEventHandlers()

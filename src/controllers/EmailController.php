@@ -3,8 +3,10 @@
 namespace webdna\craftemailcontenteditor\controllers;
 
 use Craft;
+use craft\elements\Entry;
 use craft\web\Controller;
 use webdna\craftemailcontenteditor\EmailContentEditor;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 
 /**
@@ -20,6 +22,7 @@ class EmailController extends Controller
      */
     public function actionSendEmail(): ?Response
     {
+        $this->requirePostRequest();
         $this->requireLogin();
         $this->requirePermission('testEmails');
         $id = $this->request->getBodyParam('elementId', null);
@@ -33,24 +36,29 @@ class EmailController extends Controller
         if (!$siteId) {
             $siteId = Craft::$app->getSites()->getCurrentSite()->id;
         }
-        if (!Craft::$app->getUser()->checkPermission('testEmails')) {
+
+        $emails = EmailContentEditor::getInstance()->emails;
+        $entry = Entry::find()->id($id)->siteId($siteId)->one();
+        if (!$entry || !$emails->getEmailSettingsFieldHandle($entry)) {
             return $this->asFailure(
-                "User does not have sufficient priviledges to send test email."
+                "Email entry not found"
             );
-        } else {
-            $sent = EmailContentEditor::getInstance()->emails->sendTestEmail($id, $siteId);
-            if ($sent) {
-                Craft::$app->getSession()->setNotice("Email sent successfully");
-                return $this->asSuccess(
-                    "Email sent successfully"
-                );
-            } else {
-                return $this->asFailure(
-                    "Unable to send email"
-                );
-            };
         }
 
-        return $this->redirectToPostedUrl();
+        // The "Send Test Emails" permission isn't tied to a section, so check this person can see the entry too
+        if (!Craft::$app->getElements()->canView($entry, Craft::$app->getUser()->getIdentity())) {
+            throw new ForbiddenHttpException('User is not authorized to view this entry.');
+        }
+
+        if (!$emails->sendTestEmail($entry->id, $entry->siteId)) {
+            return $this->asFailure(
+                "Unable to send email"
+            );
+        }
+
+        Craft::$app->getSession()->setNotice("Email sent successfully");
+        return $this->asSuccess(
+            "Email sent successfully"
+        );
     }
 }

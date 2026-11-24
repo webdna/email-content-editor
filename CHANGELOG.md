@@ -1,5 +1,35 @@
 # Release Notes for Email Content Editor
 
+## 2.2.0 - Unreleased [CRITICAL]
+
+This is a security release. Twig in email subjects and content could call PHP functions, which let anyone whose text ends up in an email read environment variables and files and run commands. That included customers, through names, addresses and other order details printed by the email's template.
+
+Some existing email content may stop rendering after updating. Before deploying, run `php craft email-content-editor/sandbox/check` on a staging copy of the site. It lists anything the sandbox blocks, for every email entry.
+
+### Security
+- Twig in email subjects and content is now rendered in Twig's sandbox, with an allowlist of tags, filters, functions and object properties. PHP functions can no longer be called through filters such as `map`, `filter`, `sort` and `reduce`, and `constant()`, `source()` and `include` are no longer available.
+- User accounts can no longer be read from email content (for example `entry.author.email` or `user.email`). Use `recipient` for the recipient's details.
+- Objects can no longer be looped over to read their attributes.
+- Test data (test recipient, test order, test variables) and the email's Twig are now only applied when someone who can edit the entry previews it. Visiting an email entry's URL no longer shows the test order or test user.
+- A test order or test user is only used if the person previewing or sending the test can view it.
+- Test emails are now always sent to the person sending them.
+- "Send Test Emails" now also requires permission to view the entry being sent.
+- The "Set Test Variables" permission is now enforced when the entry is saved, not just by hiding the field.
+
+### Added
+- Added the `email-content-editor/sandbox/check` console command, which test-renders every email entry in the sandbox and lists anything it blocks.
+- Added the `sandbox` setting, for adding to what email content can use. See `config.php`.
+
+### Changed
+- Requires Craft 5.9 or later.
+- Email content can only use the tags, filters and functions on the sandbox's allowlist (see `src/twig/Sandbox.php`). Among those no longer available are the `raw`, `format`, `split`, `column`, `batch` and `json_encode` filters, the `autoescape`, `include`, `macro` and `import` tags, the `range`, `constant`, `source`, `include`, `min`, `max` and `cycle` functions, and the `..` operator.
+- Commerce orders, line items, addresses, order statuses and order history expose a fixed set of properties to email content. See `src/twig/Sandbox.php` for the list, and use the `sandbox` setting to add more.
+
+### Fixed
+- An error in an email's subject no longer stops the email from being sent. The message's own subject is used instead, and the error is logged.
+- Fixed a bug where the message for a subject error was run as a shell command instead of being logged.
+- Saving an entry without the "Set Test Variables" permission no longer clears its test variables.
+
 ## 2.1.4 - 2026-10-23
 ### Fixed
 - Removed a `modifyElementsQuery()` override that called a method Craft 5 no longer has.

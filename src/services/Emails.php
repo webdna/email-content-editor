@@ -4,15 +4,18 @@ namespace webdna\craftemailcontenteditor\services;
 
 use Craft;
 use craft\elements\Entry;
+use craft\elements\User;
 use craft\helpers\App;
 
 use craft\helpers\Json;
 use craft\mail\Message;
 use craft\models\SystemMessage;
-use craft\web\twig\TemplateLoader;
+use craft\web\View;
+use webdna\craftemailcontenteditor\EmailContentEditor;
 use webdna\craftemailcontenteditor\fields\EmailSettings as FieldsEmailSettings;
 use webdna\craftemailcontenteditor\models\EmailSettings as EmailSettingsModel;
 use webdna\craftemailcontenteditor\models\Recipient;
+use webdna\craftemailcontenteditor\twig\Sandbox;
 use yii\base\Component;
 
 /**
@@ -20,6 +23,16 @@ use yii\base\Component;
  */
 class Emails extends Component
 {
+    /** Used as the test recipient when there's no test user or logged-in user, e.g. from the console. */
+    private const PLACEHOLDER_RECIPIENT = [
+        'email' => 'test@example.com',
+        'firstName' => 'Test',
+        'lastName' => 'Recipient',
+        'friendlyName' => 'Test',
+    ];
+
+    private ?Sandbox $_sandbox = null;
+
     public function findEntryForEmail(string $messageKey, int $siteId): ?Entry
     {
         $emailSettingsFields = Craft::$app->getFields()->getFieldsByType(FieldsEmailSettings::class);
@@ -29,14 +42,14 @@ class Emails extends Component
         if ($siteId) {
             $entries->siteId($siteId);
         }
-        
+
         $fields = collect($emailSettingsFields)->map(function($f) {
             return $f->handle;
         });
         foreach ($fields as $field) {
             $entries->$field(":notempty:");
         }
-        
+
         $entries->all();
 
         foreach ($entries as $entry) {
@@ -50,7 +63,7 @@ class Emails extends Component
                 return $entry;
             }
         }
-        
+
         return null;
     }
 
@@ -83,7 +96,7 @@ class Emails extends Component
 	            return $field->handle;
 	        }
 	    }
-	
+
 	    return null;
 	}
 
@@ -111,21 +124,37 @@ class Emails extends Component
         return null;
     }
 
-    public function mergeTestVariables(EmailSettingsModel $emailSettings, array $context): array
+    /**
+     * Adds an email entry's test recipient, test order and test variables to a template context.
+     *
+     * @param bool $checkPermissions Whether to only use a test user or test order that the logged-in user is
+     * allowed to view. When they can't view the test user, they're used as the test recipient themselves; when
+     * they can't view the test order, it's left out. Pass `false` only where there's no logged-in user to check
+     * against, such as console commands.
+     */
+    public function mergeTestVariables(EmailSettingsModel $emailSettings, array $context, bool $checkPermissions = true): array
     {
+        $currentUser = Craft::$app->getUser()->getIdentity();
         $testVariables = $emailSettings->testVariables;
 
-        $context['recipient'] = new Recipient($emailSettings->getTestUser());
+        $testUser = $emailSettings->getTestUser();
+        if ($testUser && $checkPermissions && !$this->_canView($testUser, $currentUser)) {
+            $testUser = $currentUser;
+        }
+        $context['recipient'] = new Recipient($testUser ?? self::PLACEHOLDER_RECIPIENT);
 
         if (
             Craft::$app->getPlugins()->isPluginEnabled('commerce')
             && !empty($emailSettings->testOrderId)
             ) {
             $order = $emailSettings->getTestOrder();
-            $orderHistory = $emailSettings->getTestOrderHistory();
-            $context['order'] = $order;
-            $context['orderHistory'] = $orderHistory;
-            $context['recipient'] = new Recipient($order->customer);
+            if ($order && (!$checkPermissions || $this->_canView($order, $currentUser))) {
+                $context['order'] = $order;
+                $context['orderHistory'] = $emailSettings->getTestOrderHistory();
+                if ($customer = $order->getCustomer()) {
+                    $context['recipient'] = new Recipient($customer);
+                }
+            }
         }
 
         if ($testVariables) {
@@ -140,20 +169,30 @@ class Emails extends Component
         return $context;
     }
 
+    /**
+     * Renders Twig written by control panel users (email subjects and content) in the sandbox.
+     *
+     * @throws \Twig\Error\Error if the Twig is invalid or uses something the sandbox doesn't allow
+     */
     public function sandboxRender(string $output, array $variables): string
     {
-        // make sure we have no global variables or access to craft.app
-        $loader = new TemplateLoader(Craft::$app->getView());
-        $twig = new \Twig\Environment($loader, [
-            // See: https://github.com/twigphp/Twig/issues/1951
-            'cache' => Craft::$app->getPath()->getCompiledTemplatesPath(),
-            'auto_reload' => true,
-            'charset' => Craft::$app->charset,
-        ]);
-
-        return $twig->createTemplate($output)->render($variables);
+        return $this->getSandbox()->render($output, $variables);
     }
-    
+
+    public function getSandbox(): Sandbox
+    {
+        return $this->_sandbox ??= new Sandbox(
+            EmailContentEditor::getInstance()->getSettings()->sandbox,
+            Craft::$app->charset,
+        );
+    }
+
+    /**
+     * Sends an email entry to the logged-in user, using its test data.
+     *
+     * Test emails always go to the person sending them (or, from the console, to the test user), so they can't
+     * be used to send content to other people.
+     */
     public function sendTestEmail(int $id, int $siteId): bool
     {
         $settings = App::mailSettings();
@@ -163,19 +202,27 @@ class Emails extends Component
         if (!$entry) {
             return false;
         }
-        $siteService->setCurrentSite($entry->siteId);
         $fieldHandle = $this->getEmailSettingsFieldHandle($entry);
         $emailSettings = new EmailSettingsModel($entry->getFieldValue($fieldHandle));
-        
-        $variables['entry'] = $entry;
-        $variables = $this->mergeTestVariables($emailSettings, $variables);
+        $to = Craft::$app->getUser()->getIdentity()?->email ?? $emailSettings->getTestUser()?->email;
+        if (!$to) {
+            return false;
+        }
 
-        $message = new Message();
-        $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);
-        $message->setTo($emailSettings->getTestUser()->email);
+        $siteService->setCurrentSite($entry->siteId);
+        try {
+            $variables['entry'] = $entry;
+            $variables = $this->mergeTestVariables($emailSettings, $variables);
 
-        $message = $this->buildEmail($entry,$message,$variables);
-        $siteService->setCurrentSite($originalSite);
+            $message = new Message();
+            $message->setFrom([App::parseEnv($settings['fromEmail']) => App::parseEnv($settings['fromName'])]);
+            $message->setTo($to);
+
+            $message = $this->buildEmail($entry,$message,$variables);
+        } finally {
+            $siteService->setCurrentSite($originalSite);
+        }
+
         if ($message == false) {
             return false;
         } else {
@@ -192,31 +239,13 @@ class Emails extends Component
         return $message;
     }
 
-
-    // Private Methods
-    // =========================================================================
-
-    private function _createSubjectLine(string $subject, array $variables, Message $message): void
+    /**
+     * Renders an email entry's site template, before the Twig in its content is rendered in the sandbox.
+     *
+     * @return string|null The HTML, or `null` if the entry's section has no template for its site
+     */
+    public function renderEntryTemplate(Entry $entry, array $variables): ?string
     {
-        $subject = $this->sandboxRender($subject, $variables);
-
-        try {
-            $message->setSubject($subject);
-        } catch (\Exception $e) {
-            $error = Craft::t('email-content-editor', `Email template parse error for system message "{email}" in "Subject:". To: "{to}". Template error: "{message}"`, [
-                'email' => $message->key,
-                'to' => $message->getTo(),
-                'message' => $e->getMessage(),
-            ]);
-            Craft::error($error, __METHOD__);
-        }
-            
-        return;
-    }
-
-    private function _createBody(Entry $entry, array $variables, Message $message): void
-    {
-        $view = Craft::$app->getView();
         $template = null;
         $siteSettings = Craft::$app->getEntries()->getSectionSiteSettings($entry->sectionId);
         foreach ($siteSettings as $setting) {
@@ -225,15 +254,50 @@ class Emails extends Component
             }
         }
         if (!$template) {
-            return;
+            return null;
         }
-        
+
+        return Craft::$app->getView()->renderTemplate($template, $variables, View::TEMPLATE_MODE_SITE);
+    }
+
+
+    // Private Methods
+    // =========================================================================
+
+    private function _canView(\craft\base\ElementInterface $element, ?User $user): bool
+    {
+        return $user !== null && Craft::$app->getElements()->canView($element, $user);
+    }
+
+    private function _createSubjectLine(string $subject, array $variables, Message $message): void
+    {
         try {
-            $htmlBody = $view->renderTemplate($template, $variables, $view::TEMPLATE_MODE_SITE);
+            $message->setSubject($this->sandboxRender($subject, $variables));
+        } catch (\Throwable $e) {
+            // Leave the subject the message already has (the system message's or Commerce email's own subject),
+            // so the email still goes out
+            if (!$message->getSubject()) {
+                $message->setSubject($subject);
+            }
+            $error = Craft::t('email-content-editor', 'Email template parse error for email "{email}" in the subject. Template error: "{message}"', [
+                'email' => $message->key,
+                'message' => $e->getMessage(),
+            ]);
+            Craft::error($error, __METHOD__);
+        }
+    }
+
+    private function _createBody(Entry $entry, array $variables, Message $message): void
+    {
+        try {
+            $htmlBody = $this->renderEntryTemplate($entry, $variables);
+            if ($htmlBody === null) {
+                return;
+            }
             // Lets double render incase the user has any {variable} stuff in there.
             try {
                 $htmlBody = $this->sandboxRender($htmlBody,$variables);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $error = Craft::t('email-content-editor', 'Email template parse error for email {email}. Failed to render content variables. Template error: {message}', [
                     'email' => $message->key,
                     'message' => $e->getMessage(),
@@ -241,14 +305,12 @@ class Emails extends Component
                 Craft::error($error, __METHOD__);
             }
             $message->setHtmlBody($htmlBody);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $error = Craft::t('email-content-editor', 'Email template parse error for email {email}. Failed to set bodyHtml. Template error: {message}', [
                 'email' => $message->key,
                 'message' => $e->getMessage(),
             ]);
             Craft::error($error, __METHOD__);
         }
-        //   Craft::dd($htmlBody);
-        return;
     }
 }
